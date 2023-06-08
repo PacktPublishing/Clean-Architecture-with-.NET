@@ -1,2 +1,2 @@
-# Clean-Architecture-with-.NET-7
-Clean Architecture with .NET 7 by Packt Publishing
+# Clean-Architecture-with-.NET
+Clean Architecture with .NET by Packt Publishing
