@@ -2,6 +2,9 @@
 using Application.Interfaces.Services.Payment;
 using Infrastructure.Clients;
 using Infrastructure.Configuration;
+using Infrastructure.Mapping;
+using Infrastructure.Persistence.EntityFramework;
+using Infrastructure.Persistence.Repositories;
 using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,10 +24,21 @@ public static class ServiceCollectionExtensions
         services.AddOptions()
             .AddTransient(typeof(OptionsFactory<>))
             .AddTransient(typeof(OptionsMonitor<>))
+            .AddOptions<SqlServerOptions>(configuration)
             .AddOptions<PaymentGatewayApiOptions>(configuration);
+
+        // Data
+        services.AddSqlServer()
+            .AddScoped<IProductRepository, ProductRepository>()
+            .AddScoped<IOrderRepository, OrderRepository>()
+            .AddScoped<IShoppingCartRepository, ShoppingCartRepository>()
+            .AddScoped<IUserRepository, UserRepository>();
 
         // Services
         services.AddScoped<IPaymentGateway, PaymentGateway>();
+
+        // AutoMapper
+        services.AddAutoMapper(typeof(InfrastructureMappingProfile));
 
         // HttpClients
         services.AddPaymentGatewayApi();
@@ -55,6 +69,31 @@ public static class ServiceCollectionExtensions
         // You can log a warning or throw an exception as needed.
         // For example:
         // throw new InvalidOperationException($"Configuration section '{sectionKey}' does not exist or is empty.");
+        return services;
+    }
+
+    private static IServiceCollection AddSqlServer(this IServiceCollection services)
+    {
+        services.AddDbContextFactory<CoreDbContext>(
+            (serviceProvider, builder) =>
+            {
+                var options = serviceProvider.GetRequiredService<IOptionsMonitor<SqlServerOptions>>().CurrentValue;
+
+                if (string.IsNullOrEmpty(options.ConnectionString))
+                    throw new ArgumentNullException(nameof(options.ConnectionString));
+
+                builder.UseSqlServer(options.ConnectionString, sqlServerOptions =>
+                    {
+                        sqlServerOptions.MigrationsAssembly(typeof(CoreDbContext).Assembly.FullName);
+                        sqlServerOptions.EnableRetryOnFailure();
+                    }
+                );
+
+                if (options.EnableSensitiveDataLogging)
+                    builder.EnableSensitiveDataLogging();
+            }
+        );
+
         return services;
     }
 
