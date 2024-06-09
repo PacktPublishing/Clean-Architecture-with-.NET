@@ -5,6 +5,6 @@ namespace Application.Interfaces.UseCases
 {
     public interface IRemoveItemFromCartUseCase
     {
-        Task ExecuteAsync(RemoveItemFromCartInput input);
+        Task RemoveItemFromCartAsync(RemoveItemFromCartInput input);
     }
 }

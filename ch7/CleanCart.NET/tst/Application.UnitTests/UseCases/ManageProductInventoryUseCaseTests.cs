@@ -9,7 +9,7 @@ namespace Application.UnitTests.UseCases
     public class ManageProductInventoryUseCaseTests
     {
         [Fact]
-        public async Task UpdateProductInventory_AdministratorRole_UpdatesStockLevel()
+        public async Task UpdateProductInventoryAsync_AdministratorRole_UpdatesStockLevel()
         {
             // Arrange
             var userId = Guid.NewGuid();
@@ -27,14 +27,14 @@ namespace Application.UnitTests.UseCases
             var useCase = new ManageProductInventoryUseCase(userRepository.Object, productRepository.Object);
 
             // Act
-            await useCase.UpdateProductInventory(userId, productId, stockLevel);
+            await useCase.UpdateProductInventoryAsync(userId, productId, stockLevel);
 
             // Assert
             productRepository.Verify(repo => repo.UpdateAsync(It.Is<Product>(p => p.StockLevel == stockLevel)), Times.Once);
         }
 
         [Fact]
-        public async Task UpdateProductInventory_InvalidRole_ThrowsUnauthorizedAccessException()
+        public async Task UpdateProductInventoryAsync_InvalidRole_ThrowsUnauthorizedAccessException()
         {
             // Arrange
             var userId = Guid.NewGuid();
@@ -53,7 +53,7 @@ namespace Application.UnitTests.UseCases
             var useCase = new ManageProductInventoryUseCase(userRepository.Object, productRepository.Object);
 
             // Act and Assert
-            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => useCase.UpdateProductInventory(userId, productId, stockLevel));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => useCase.UpdateProductInventoryAsync(userId, productId, stockLevel));
 
             // Verify that the product's stock level was not updated
             productRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Product>()), Times.Never);

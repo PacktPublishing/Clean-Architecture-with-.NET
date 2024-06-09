@@ -8,7 +8,7 @@ namespace Application.UnitTests.UseCases
     public class AddItemToCartUseCaseTests
     {
         [Fact]
-        public void Can_AddItemToCart()
+        public void AddItemToCartAsync_ValidInput_AddsItemToCart()
         {
             // Arrange
             var shoppingCartRepository = new Mock<IShoppingCartRepository>();
@@ -26,7 +26,7 @@ namespace Application.UnitTests.UseCases
             var useCase = new AddItemToCartUseCase(shoppingCartRepository.Object, productRepository.Object);
 
             // Act
-            _ = useCase.ExecuteAsync(new AddItemToCartInput(userId, product.Id, 1));
+            _ = useCase.AddItemToCartAsync(new AddItemToCartInput(userId, product.Id, 1));
 
             // Assert
             productRepository.Verify(r => r.GetByIdAsync(product.Id), Times.Once);

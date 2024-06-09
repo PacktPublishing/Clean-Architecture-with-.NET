@@ -17,7 +17,7 @@ namespace Application.UseCases.AddItemToCart
             _productRepository = productRepository;
         }
 
-        public async Task ExecuteAsync(AddItemToCartInput input)
+        public async Task AddItemToCartAsync(AddItemToCartInput input)
         {
             var shoppingCart = await _shoppingCartRepository.GetByCustomerIdAsync(input.CustomerId);
             var product = await _productRepository.GetByIdAsync(input.ProductId);

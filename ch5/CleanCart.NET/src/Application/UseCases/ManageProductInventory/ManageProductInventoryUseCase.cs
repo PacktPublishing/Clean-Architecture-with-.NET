@@ -18,7 +18,7 @@ namespace Application.UseCases.ManageProductInventory
             _productRepository = productRepository;
         }
 
-        public async Task UpdateProductInventory(Guid userId, Guid productId, int stockLevel)
+        public async Task UpdateProductInventoryAsync(Guid userId, Guid productId, int stockLevel)
         {
             User user = await _userRepository.GetByIdAsync(userId);
             if (!user.Roles.Contains(UserRole.Administrator))

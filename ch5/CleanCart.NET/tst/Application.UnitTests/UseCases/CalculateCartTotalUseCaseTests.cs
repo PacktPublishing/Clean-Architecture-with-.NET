@@ -8,7 +8,7 @@ namespace Application.UnitTests.UseCases
     public class CalculateCartTotalUseCaseTests
     {
         [Fact]
-        public async Task CalculateTotal_ValidInput_CalculatesCartTotal()
+        public async Task CalculateTotalAsync_ValidInput_CalculatesCartTotal()
         {
             // Arrange
             var customerId = Guid.NewGuid();
@@ -25,7 +25,7 @@ namespace Application.UnitTests.UseCases
             var input = new CalculateCartTotalInput { CustomerId = customerId };
 
             // Act
-            decimal total = await useCase.CalculateTotal(input);
+            decimal total = await useCase.CalculateTotalAsync(input);
 
             // Assert
             decimal expectedTotal = (2 * 10.0m + 1 * 15.0m) * (1 + 0.08M); // Subtotal + Tax

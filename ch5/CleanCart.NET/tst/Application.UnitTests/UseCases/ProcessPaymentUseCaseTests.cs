@@ -12,7 +12,7 @@ namespace Application.UnitTests.UseCases
     public class ProcessPaymentUseCaseTests
     {
         [Fact]
-        public async Task ProcessPayment_PaymentSuccessful_UpdatesOrderStatusToPaid()
+        public async Task ProcessPaymentAsync_PaymentSuccessful_UpdatesOrderStatusToPaid()
         {
             // Arrange
             var mockOrderRepository = new Mock<IOrderRepository>();
@@ -24,7 +24,7 @@ namespace Application.UnitTests.UseCases
                 .ReturnsAsync(new PaymentResult { Status = PaymentStatus.Success });
 
             var mockCalculateCartTotalUseCase = new Mock<ICalculateCartTotalUseCase>();
-            mockCalculateCartTotalUseCase.Setup(useCase => useCase.CalculateTotal(It.IsAny<CalculateCartTotalInput>()))
+            mockCalculateCartTotalUseCase.Setup(useCase => useCase.CalculateTotalAsync(It.IsAny<CalculateCartTotalInput>()))
                 .ReturnsAsync(100.0m);
 
             var useCase = new ProcessPaymentUseCase(
@@ -44,14 +44,14 @@ namespace Application.UnitTests.UseCases
             };
 
             // Act
-            await useCase.ProcessPayment(input);
+            await useCase.ProcessPaymentAsync(input);
 
             // Assert
             mockOrderRepository.Verify(repo => repo.UpdateOrderAsync(It.Is<Order>(o => o.Status == OrderStatus.Paid)), Times.Once);
         }
 
         [Fact]
-        public async Task ProcessPayment_PaymentFailed_UpdatesOrderStatusToPaymentFailed()
+        public async Task ProcessPaymentAsync_PaymentFailed_UpdatesOrderStatusToPaymentFailed()
         {
             // Arrange
             var mockOrderRepository = new Mock<IOrderRepository>();
@@ -63,7 +63,7 @@ namespace Application.UnitTests.UseCases
                 .ReturnsAsync(new PaymentResult { Status = PaymentStatus.Failed });
 
             var mockCalculateCartTotalUseCase = new Mock<ICalculateCartTotalUseCase>();
-            mockCalculateCartTotalUseCase.Setup(useCase => useCase.CalculateTotal(It.IsAny<CalculateCartTotalInput>()))
+            mockCalculateCartTotalUseCase.Setup(useCase => useCase.CalculateTotalAsync(It.IsAny<CalculateCartTotalInput>()))
                 .ReturnsAsync(100.0m);
 
             var useCase = new ProcessPaymentUseCase(
@@ -83,7 +83,7 @@ namespace Application.UnitTests.UseCases
             };
 
             // Act
-            await useCase.ProcessPayment(input);
+            await useCase.ProcessPaymentAsync(input);
 
             // Assert
             mockOrderRepository.Verify(repo => repo.UpdateOrderAsync(It.Is<Order>(o => o.Status == OrderStatus.PaymentFailed)), Times.Once);

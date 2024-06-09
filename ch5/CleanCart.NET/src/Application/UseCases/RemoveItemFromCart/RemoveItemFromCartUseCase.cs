@@ -14,7 +14,7 @@ namespace Application.UseCases.RemoveItemFromCart
             _shoppingCartRepository = shoppingCartRepository;
         }
 
-        public async Task ExecuteAsync(RemoveItemFromCartInput input)
+        public async Task RemoveItemFromCartAsync(RemoveItemFromCartInput input)
         {
             ShoppingCart cart = await _shoppingCartRepository.GetByCustomerIdAsync(input.CustomerId);
 

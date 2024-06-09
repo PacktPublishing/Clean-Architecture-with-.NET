@@ -5,6 +5,6 @@ namespace Application.Interfaces.UseCases
 {
     public interface IProcessPaymentUseCase
     {
-        Task ProcessPayment(ProcessPaymentInput input);
+        Task ProcessPaymentAsync(ProcessPaymentInput input);
     }
 }

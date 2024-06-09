@@ -5,6 +5,6 @@ namespace Application.Interfaces.UseCases
 {
     public interface IAddItemToCartUseCase
     {
-        Task ExecuteAsync(AddItemToCartInput input);
+        Task AddItemToCartAsync(AddItemToCartInput input);
     }
 }

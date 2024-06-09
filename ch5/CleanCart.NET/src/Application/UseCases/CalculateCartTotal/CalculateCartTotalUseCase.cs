@@ -15,7 +15,7 @@ namespace Application.UseCases.CalculateCartTotal
             _shoppingCartRepository = shoppingCartRepository;
         }
 
-        public async Task<decimal> CalculateTotal(CalculateCartTotalInput input)
+        public async Task<decimal> CalculateTotalAsync(CalculateCartTotalInput input)
         {
             var shoppingCart = await _shoppingCartRepository.GetByCustomerIdAsync(input.CustomerId);
 

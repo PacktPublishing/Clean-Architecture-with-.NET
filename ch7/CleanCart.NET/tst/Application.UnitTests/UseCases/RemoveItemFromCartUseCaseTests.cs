@@ -8,7 +8,7 @@ namespace Application.UnitTests.UseCases
     public class RemoveItemFromCartUseCaseTests
     {
         [Fact]
-        public async Task ExecuteAsync_ValidInput_RemovesItemFromCart()
+        public async Task RemoveItemFromCartAsync_ValidInput_RemovesItemFromCart()
         {
             // Arrange
             var userId = Guid.NewGuid();
@@ -28,7 +28,7 @@ namespace Application.UnitTests.UseCases
             var input = new RemoveItemFromCartInput(userId, productId, removeQuantity);
 
             // Act
-            await useCase.ExecuteAsync(input);
+            await useCase.RemoveItemFromCartAsync(input);
 
             // Assert
             var item = shoppingCart.Items.SingleOrDefault(i => i.ProductId == productId);

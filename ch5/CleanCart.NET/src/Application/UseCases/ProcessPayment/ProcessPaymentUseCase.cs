@@ -25,14 +25,14 @@ namespace Application.UseCases.ProcessPayment
             _calculateCartTotalUseCase = calculateCartTotalUseCase;
         }
 
-        public async Task ProcessPayment(ProcessPaymentInput input)
+        public async Task ProcessPaymentAsync(ProcessPaymentInput input)
         {
             var calculateTotalInput = new CalculateCartTotalInput
             {
                 CustomerId = input.UserId
             };
 
-            decimal totalAmount = await _calculateCartTotalUseCase.CalculateTotal(calculateTotalInput);
+            decimal totalAmount = await _calculateCartTotalUseCase.CalculateTotalAsync(calculateTotalInput);
 
             var order = new Order(input.UserId, input.Items, totalAmount);
 

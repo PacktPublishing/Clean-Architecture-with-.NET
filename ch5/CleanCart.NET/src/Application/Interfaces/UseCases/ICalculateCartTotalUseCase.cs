@@ -5,6 +5,6 @@ namespace Application.Interfaces.UseCases
 {
     public interface ICalculateCartTotalUseCase
     {
-        Task<decimal> CalculateTotal(CalculateCartTotalInput input);
+        Task<decimal> CalculateTotalAsync(CalculateCartTotalInput input);
     }
 }

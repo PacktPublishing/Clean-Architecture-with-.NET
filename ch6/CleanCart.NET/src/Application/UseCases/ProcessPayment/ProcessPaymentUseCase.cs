@@ -30,14 +30,14 @@ namespace Application.UseCases.ProcessPayment
             _mapper = mapper;
         }
 
-        public async Task ProcessPayment(ProcessPaymentInput input)
+        public async Task ProcessPaymentAsync(ProcessPaymentInput input)
         {
             var calculateTotalInput = new CalculateCartTotalInput
             {
                 UserId = input.UserId
             };
 
-            decimal totalAmount = await _calculateCartTotalUseCase.CalculateTotal(calculateTotalInput);
+            decimal totalAmount = await _calculateCartTotalUseCase.CalculateTotalAsync(calculateTotalInput);
 
             var orderItems = _mapper.Map<List<OrderItem>>(input.Items);
             var order = new Order(input.UserId, orderItems, totalAmount);
