@@ -1,0 +1,36 @@
+﻿@namespace Presentation.BSA.Components
+
+<MudTable Items="@Orders" Hover>
+    <HeaderContent>
+        <MudTh>Order ID</MudTh>
+        <MudTh>Order Date</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Total Amount</MudTh>
+        <MudTh>Items</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Order ID">@context.Id</MudTd>
+        <MudTd DataLabel="Order Date">@context.CreatedOn.ToString("yyyy-MM-dd")</MudTd>
+        <MudTd DataLabel="Status">@context.Status</MudTd>
+        <MudTd DataLabel="Total Amount">@context.TotalAmount.ToString("C")</MudTd>
+        <MudTd DataLabel="Items">
+            <MudTable Items="@context.Items" Hover Dense>
+                <HeaderContent>
+                    <MudTh>Product Name</MudTh>
+                    <MudTh>Quantity</MudTh>
+                    <MudTh>Price</MudTh>
+                </HeaderContent>
+                <RowTemplate Context="SubContext">
+                    <MudTd>@SubContext.ProductName</MudTd>
+                    <MudTd>@SubContext.Quantity</MudTd>
+                    <MudTd>@SubContext.ProductPrice.ToString("C")</MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Parameter]
+    public List<Order> Orders { get; set; } = new();
+}

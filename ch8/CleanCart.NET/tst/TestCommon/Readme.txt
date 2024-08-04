@@ -1,0 +1,1 @@
+This library is for shared code between the Unit/Integration test projects. Shared dependencies can also be added to this project for convenience.

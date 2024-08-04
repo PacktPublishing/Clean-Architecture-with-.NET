@@ -1,0 +1,47 @@
+﻿@page "/admin"
+
+<PageTitle>Administration</PageTitle>
+
+<MudContainer>
+
+    <MudText Typo="Typo.h3" Class="mb-4">Administration</MudText>
+
+    <MudPaper Elevation="3" Class="pa-4">
+
+        <MudText Typo="Typo.h4">Product Inventory Management</MudText>
+
+        @if (!_products.Any())
+        {
+            <MudText Typo="Typo.subtitle1">No products available.</MudText>
+        }
+        else
+        {
+            <MudTable Items="_products" Striped Bordered Hover>
+
+                <HeaderContent>
+                    <MudTh>Product</MudTh>
+                    <MudTh>Price</MudTh>
+                    <MudTh>Stock Level</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>@context.Price.ToString("C")</MudTd>
+                    <MudTd>
+                        <MudTextField T="int"
+                                      Value="context.StockLevel"
+                                      ValueChanged="@(new Action<int>(value => OnStockLevelChanged(context, value)))"/>
+                    </MudTd>
+                    <MudTd>
+                        <MudButton Color="Color.Primary"
+                                   OnClick="() => UpdateStockLevel(context.Id, context.StockLevel)">
+                            Update
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+
+            </MudTable>
+        }
+    </MudPaper>
+</MudContainer>

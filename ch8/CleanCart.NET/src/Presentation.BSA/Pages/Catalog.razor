@@ -1,0 +1,59 @@
+﻿@page "/catalog"
+
+<PageTitle>Product Catalog</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+
+    <MudText Typo="Typo.h3" Class="mb-4">Product Catalog</MudText>
+
+    <MudGrid Spacing="3">
+        @if (_isLoading)
+        {
+            @for (int i = 0; i < PageSize; i++)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard>
+                        <MudCardMedia Height="200" />
+                        <MudCardContent>
+                            <MudSkeleton Width="60%" />
+                            <MudSkeleton Width="40%" />
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudSkeleton Width="50%" Height="36px" />
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        }
+        else
+        {
+            @foreach (var product in PagedProducts)
+            {
+                <MudItem xs="12" sm="6" md="4">
+                    <MudCard Style="height: 100%" Class="d-flex flex-column justify-space-between">
+                        <div>
+                            <MudCardMedia Image="@product.ImageUrl" Height="200" />
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6">@product.Name</MudText>
+                                <MudText Typo="Typo.body2">@product.Price.ToString("C")</MudText>
+                            </MudCardContent>
+                        </div>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       OnClick="@(() => AddToCart(@product.Id))">
+                                Add to Cart
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        }
+    </MudGrid>
+
+    <MudDivider Class="my-2" />
+
+    <MudPagination Selected="@CurrentPage"
+                   SelectedChanged="ChangePage"
+                   Count="@((int) Math.Ceiling((double) _products.Count / PageSize))" />
+</MudContainer>

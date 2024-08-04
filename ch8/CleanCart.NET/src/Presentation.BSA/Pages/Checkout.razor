@@ -1,0 +1,92 @@
+﻿@page "/checkout"
+
+<PageTitle>Checkout</PageTitle>
+
+<MudText Typo="Typo.h3" Class="mb-2">Checkout</MudText>
+
+@if (_shoppingCart == null)
+{
+    <MudAlert Severity="Severity.Warning">Shopping Cart not found.</MudAlert>
+}
+else
+{
+    <MudText Typo="Typo.h5">Order Summary</MudText>
+
+    <MudTable Items="@_shoppingCart.Items"
+              Class="mt-4">
+
+        <HeaderContent>
+            <MudTh>Product Name</MudTh>
+            <MudTh>Quantity</MudTh>
+            <MudTh>Price</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd>@context.ProductName</MudTd>
+            <MudTd>@context.Quantity</MudTd>
+            <MudTd>@($"{context.ProductPrice:C}")</MudTd>
+        </RowTemplate>
+
+    </MudTable>
+
+    <MudStack Row Justify="Justify.FlexEnd">
+        <MudText Typo="Typo.subtitle2"
+                 Class="my-2">
+            Total Amount: @($"{_cartTotal:C}")
+        </MudText>
+    </MudStack>
+
+    <MudText Typo="Typo.h5">Payment Information</MudText>
+
+    <MudPaper Class="mt-4" Elevation="0">
+
+        <MudForm @ref="_form"
+                 Model="@_viewModel"
+                 Class="p-4"
+                 Validation="@(_viewModelValidator.ValidateValue)">
+
+            <AntiforgeryToken/>
+
+            <MudTextField T="string"
+                          @bind-Value="_viewModel.CardNumber"
+                          For="() => _viewModel.CardNumber"
+                          Label="Card Number"
+                          MaxLength="16"
+                          Mask="@(new PatternMask("0000-0000-0000-0000"))"/>
+
+            <MudTextField T="string"
+                          @bind-Value="_viewModel.CardHolderName"
+                          For="() => _viewModel.CardHolderName"
+                          Label="Card Holder Name"/>
+
+            <MudTextField T="string"
+                          @bind-Value="_viewModel.ExpirationMonthYear"
+                          For="() => _viewModel.ExpirationMonthYear"
+                          Label="Expiration Month/Year"
+                          MaxLength="4"
+                          Mask="@(new DateMask("MM/yy"))"/>
+
+            <MudTextField T="string"
+                          @bind-Value="_viewModel.CVV"
+                          For="() => _viewModel.CVV"
+                          Label="CVV"
+                          MaxLength="3"
+                          Mask="@(new PatternMask("000"))"/>
+
+            <MudTextField T="string"
+                          @bind-Value="_viewModel.PostalCode"
+                          For="() => _viewModel.PostalCode"
+                          MaxLength="5"
+                          Mask="@(new PatternMask("00000"))"
+                          Label="Postal Code"/>
+
+            @* Note: for MudForm, do NOT use a button with ButtonType="ButtonType.Submit" *@
+            <MudButton Class="mt-3"
+                       Color="Color.Primary"
+                       Variant="Variant.Filled"
+                       OnClick="@(async () => await OnFormSubmit())">
+                Submit Payment
+            </MudButton>
+        </MudForm>
+    </MudPaper>
+}

@@ -1,0 +1,28 @@
+﻿@page "/customerservice"
+
+<PageTitle>Customer Service</PageTitle>
+
+<MudText Typo="Typo.h3">Customer Service</MudText>
+<MudTextField @bind-Value="_customerId"
+              Label="Customer ID" />
+<MudButton Color="Color.Primary" OnClick="() => LoadCart(_customerId)">Shopping Cart</MudButton>
+<MudButton Color="Color.Primary" OnClick="() => LoadOrderHistory(_customerId)">Order History</MudButton>
+
+@if (_shoppingCart != null && _showShoppingCart)
+{
+    <MudPaper Class="mt-4" Elevation="0">
+        <MudText Typo="Typo.h5" GutterBottom>Customer: @_customer?.FullName</MudText>
+        <ShoppingCartTable ShoppingCart="@_shoppingCart" OnRemoveItemClicked="RemoveFromCart" />
+    </MudPaper>
+}
+else if (_orderHistory.Any() && _showOrderHistory)
+{
+    <MudPaper Class="mt-4" Elevation="0">
+        <MudText Typo="Typo.h5" GutterBottom>Customer: @_customer?.FullName</MudText>
+        <OrderTable Orders="@_orderHistory" />
+    </MudPaper>
+}
+else
+{
+    <MudAlert Severity="@_severity">@_severityText</MudAlert>
+}
