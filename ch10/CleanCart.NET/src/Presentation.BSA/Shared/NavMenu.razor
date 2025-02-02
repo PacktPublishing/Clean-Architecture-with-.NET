@@ -1,0 +1,11 @@
+﻿<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All">Home</MudNavLink>
+    <MudNavLink Href="/orders" Match="NavLinkMatch.Prefix">Order History</MudNavLink>
+    <MudNavLink Href="/catalog" Match="NavLinkMatch.Prefix">Product Catalog</MudNavLink>
+    <AuthorizeView Policy="@UserRole.CustomerService.ToString()">
+        <MudNavLink Href="/customerservice" Match="NavLinkMatch.Prefix">Customer Service</MudNavLink>
+    </AuthorizeView>
+    <AuthorizeView Policy="@UserRole.Administrator.ToString()">
+        <MudNavLink Href="/admin" Match="NavLinkMatch.Prefix">Administration</MudNavLink>
+    </AuthorizeView>
+</MudNavMenu>

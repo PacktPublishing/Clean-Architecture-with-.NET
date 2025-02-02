@@ -1,0 +1,18 @@
+﻿@page "/orders"
+
+<PageTitle>Order History</PageTitle>
+
+<MudText Typo="Typo.h3" Class="mb-4">Order History</MudText>
+
+@if (_isLoading)
+{
+    <MudProgressCircular Indeterminate Color="Color.Primary" />
+}
+else if (_orderHistory.Any())
+{
+    <OrderTable Orders="@_orderHistory" />
+}
+else
+{
+    <MudAlert Severity="Severity.Info">No order history found.</MudAlert>
+}
