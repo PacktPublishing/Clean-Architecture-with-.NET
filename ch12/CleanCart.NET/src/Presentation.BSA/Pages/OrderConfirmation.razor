@@ -1,0 +1,39 @@
+﻿@page "/order-confirmation/{OrderId:guid}"
+
+<PageTitle>Order Confirmation</PageTitle>
+
+<MudContainer>
+    <MudText Typo="Typo.h3" Class="mb-4">Order Confirmation</MudText>
+
+    @if (_order != null)
+    {
+        <MudStack Row Justify="Justify.SpaceBetween">
+            <MudText Typo="Typo.body1" Class="mb-2">Order Details:</MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">Order ID: @_order?.Id</MudText>
+        </MudStack>
+
+        <MudTable Items="@_order.Items" Class="mb-4">
+
+            <HeaderContent>
+                <MudTh>Product Name</MudTh>
+                <MudTh>Quantity</MudTh>
+                <MudTh>Price</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>@context.ProductName</MudTd>
+                <MudTd>@context.Quantity</MudTd>
+                <MudTd>@($"{context.ProductPrice:C}")</MudTd>
+            </RowTemplate>
+
+        </MudTable>
+
+        <MudText Typo="Typo.subtitle1" Class="mb-2">Total Amount: @($"{_order.TotalAmount:C}")</MudText>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-4">Order not found.</MudAlert>
+    }
+
+    <MudButton Href="/orders" Color="Color.Primary" Variant="Variant.Filled">View All Orders</MudButton>
+</MudContainer>

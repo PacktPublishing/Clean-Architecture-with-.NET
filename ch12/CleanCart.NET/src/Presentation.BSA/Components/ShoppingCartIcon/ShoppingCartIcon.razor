@@ -1,0 +1,78 @@
+@namespace Presentation.BSA.Components
+@using Application.Operations.UseCases.AccessCustomerData
+@implements IDisposable
+
+<MudTooltip Arrow
+            Placement="Placement.Bottom"
+            Text="View Shopping Cart">
+
+    <div @onclick="@OnShoppingCartIconClick">
+
+        <MudBadge Visible="@_isBadgeVisible"
+                  Overlap Color="Color.Tertiary"
+                  Content="@_cartItemCount"
+                  Class="mx-4 d-flex"
+                  Style="cursor: pointer">
+
+            <MudIcon Icon="@Icons.Material.Filled.ShoppingCart"
+                     Size="Size.Medium"
+                     Class="d-flex flex-column justify-center"/>
+
+        </MudBadge>
+
+    </div>
+
+</MudTooltip>
+
+@code {
+    [Inject]
+    private IAuthenticationService AuthenticationService { get; set; } = null!;
+
+    [Inject]
+    private IMediator Mediator { get; set; } = null!;
+
+    [Inject]
+    private ShoppingCartState ShoppingCartState { get; set; } = null!;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
+
+    private User? _user;
+    private ShoppingCart? _shoppingCart;
+    private int _cartItemCount;
+    private bool _isBadgeVisible;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ShoppingCartState.OnChange += UpdateCart;
+        _user ??= await AuthenticationService.GetCurrentUserAsync();
+        await RefreshShoppingCart();
+    }
+
+    private void OnShoppingCartIconClick()
+    {
+        Navigation.NavigateTo("/shoppingcart");
+    }
+
+    private async void UpdateCart()
+    {
+        await RefreshShoppingCart();
+        StateHasChanged();
+    }
+
+    private async Task RefreshShoppingCart()
+    {
+        if (_user != null)
+        {
+            var query = new AccessCustomerShoppingCartQuery(_user.Id);
+            _shoppingCart = await Mediator.Send(query);
+            _isBadgeVisible = _shoppingCart?.Items.Count > 0;
+            _cartItemCount = _shoppingCart?.Items.Count ?? 0;
+        }
+    }
+
+    public void Dispose()
+    {
+        ShoppingCartState.OnChange -= UpdateCart;
+    }
+}

@@ -1,0 +1,33 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4">
+    <MudPaper Class="pa-4" Elevation="1">
+
+        <MudText Typo="Typo.h3"
+                 GutterBottom>
+            Project Odyssey
+        </MudText>
+
+        <MudText Typo="Typo.subtitle1"
+                 GutterBottom>
+            Welcome to Project Odyssey, a shopping cart application built with Blazor Server.
+        </MudText>
+
+        <MudDivider Class="my-4"/>
+
+        <MudText Typo="Typo.body1" GutterBottom>
+            This project is designed to demonstrate the fundamentals of Clean Architecture in .NET.
+            You will learn how to structure your application to achieve separation of concerns,
+            ensure testability, and improve maintainability.
+        </MudText>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Href="/catalog">
+            Get Started
+        </MudButton>
+
+    </MudPaper>
+</MudContainer>
