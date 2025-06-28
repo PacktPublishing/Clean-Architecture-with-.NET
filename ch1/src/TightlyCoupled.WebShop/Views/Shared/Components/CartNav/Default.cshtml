@@ -1,0 +1,43 @@
+@model int
+
+@{
+    var isAuthenticated = ViewBag.IsAuthenticated ?? false;
+}
+
+@if (isAuthenticated)
+{
+    <a class="nav-link text-dark position-relative d-flex align-items-center" 
+       asp-area="" 
+       asp-controller="ShoppingCart" 
+       asp-action="Index">
+        <div class="position-relative">
+            <i class="fas fa-shopping-cart fa-lg"></i>
+            @if (Model > 0)
+            {
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem; min-width: 1.5rem; height: 1.5rem; line-height: 1.2;">
+                    @Model
+                    <span class="visually-hidden">items in cart</span>
+                </span>
+            }
+        </div>
+        <span class="ms-1">Cart</span>
+    </a>
+}
+else
+{
+    <a class="nav-link text-dark position-relative d-flex align-items-center" 
+       asp-area="Identity" 
+       asp-page="/Account/Login">
+        <div class="position-relative">
+            <i class="fas fa-shopping-cart fa-lg"></i>
+            @if (Model > 0)
+            {
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem; min-width: 1.5rem; height: 1.5rem; line-height: 1.2;">
+                    @Model
+                    <span class="visually-hidden">items in cart</span>
+                </span>
+            }
+        </div>
+        <span class="ms-1">Cart</span>
+    </a>
+}

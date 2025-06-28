@@ -30,141 +30,170 @@ namespace TightlyCoupled.WebShop.Controllers
         // GET: ShoppingCart
         public async Task<IActionResult> Index()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userEmail = User.Identity?.Name ?? "Unknown";
-            
-            if (string.IsNullOrEmpty(userId))
+            try
             {
-                _logger.LogWarning("Anonymous user attempted to view shopping cart");
-                return RedirectToAction("Login", "Account", new { area = "Identity" });
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userEmail = User.Identity?.Name ?? "Unknown";
+                
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Anonymous user attempted to view shopping cart");
+                    return RedirectToAction("Login", "Account", new { area = "Identity" });
+                }
+
+                var cartItems = await _context.CartItems
+                    .Where(c => c.UserId == userId)
+                    .ToListAsync();
+
+                _logger.LogInformation("User {UserEmail} viewed their shopping cart containing {ItemCount} items", userEmail, cartItems.Count);
+
+                return View(cartItems);
             }
-
-            var cartItems = await _context.CartItems
-                .Where(c => c.UserId == userId)
-                .ToListAsync();
-
-            _logger.LogInformation("User {UserEmail} viewed their shopping cart containing {ItemCount} items", userEmail, cartItems.Count);
-
-            return View(cartItems);
+            catch (Exception ex)
+            {
+                var userEmail = User.Identity?.Name ?? "Unknown";
+                _logger.LogError(ex, "Error occurred while loading shopping cart for user {UserEmail}", userEmail);
+                throw;
+            }
         }
 
         // POST: ShoppingCart/AddItem
         [HttpPost]
         public async Task<IActionResult> AddItem(string name, decimal price, int quantity = 1)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userEmail = User.Identity?.Name ?? "Unknown";
-            
-            if (string.IsNullOrEmpty(userId))
+            try
             {
-                _logger.LogWarning("Anonymous user attempted to add item {ItemName} to cart", name);
-                return RedirectToAction("Login", "Account", new { area = "Identity" });
-            }
-
-            _logger.LogInformation("User {UserEmail} (ID: {UserId}) attempting to add item {ItemName} (Price: {Price:C}, Quantity: {Quantity}) to cart", 
-                userEmail, userId, name, price, quantity);
-
-            if (!string.IsNullOrEmpty(name) && price > 0 && quantity > 0)
-            {
-                // Check if item already exists in cart
-                var existingItem = await _context.CartItems
-                    .FirstOrDefaultAsync(c => c.UserId == userId && c.ItemName.ToLower() == name.ToLower());
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userEmail = User.Identity?.Name ?? "Unknown";
                 
-                if (existingItem != null)
+                if (string.IsNullOrEmpty(userId))
                 {
-                    var oldQuantity = existingItem.Quantity;
-                    existingItem.Quantity += quantity;
-                    _logger.LogInformation("Updated existing cart item {ItemName} for user {UserEmail}: quantity changed from {OldQuantity} to {NewQuantity}", 
-                        name, userEmail, oldQuantity, existingItem.Quantity);
-                    TempData["SuccessMessage"] = $"Updated {name} quantity in cart. New quantity: {existingItem.Quantity}";
+                    _logger.LogWarning("Anonymous user attempted to add item {ItemName} to cart", name);
+                    return RedirectToAction("Login", "Account", new { area = "Identity" });
+                }
+
+                _logger.LogInformation("User {UserEmail} (ID: {UserId}) attempting to add item {ItemName} (Price: {Price:C}, Quantity: {Quantity}) to cart", 
+                    userEmail, userId, name, price, quantity);
+
+                if (!string.IsNullOrEmpty(name) && price > 0 && quantity > 0)
+                {
+                    // Check if item already exists in cart
+                    var existingItem = await _context.CartItems
+                        .FirstOrDefaultAsync(c => c.UserId == userId && c.ItemName.ToLower() == name.ToLower());
+                    
+                    if (existingItem != null)
+                    {
+                        var oldQuantity = existingItem.Quantity;
+                        existingItem.Quantity += quantity;
+                        _logger.LogInformation("Updated existing cart item {ItemName} for user {UserEmail}: quantity changed from {OldQuantity} to {NewQuantity}", 
+                            name, userEmail, oldQuantity, existingItem.Quantity);
+                        TempData["SuccessMessage"] = $"Updated {name} quantity in cart. New quantity: {existingItem.Quantity}";
+                    }
+                    else
+                    {
+                        var cartItem = new CartItem 
+                        { 
+                            UserId = userId,
+                            ItemName = name, 
+                            Price = price, 
+                            Quantity = quantity 
+                        };
+                        _context.CartItems.Add(cartItem);
+                        _logger.LogInformation("Added new cart item {ItemName} for user {UserEmail}: Price: {Price:C}, Quantity: {Quantity}", 
+                            name, userEmail, price, quantity);
+                        TempData["SuccessMessage"] = $"Added {name} to cart!";
+                    }
+                    
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Cart changes saved to database for user {UserEmail}", userEmail);
                 }
                 else
                 {
-                    var cartItem = new CartItem 
-                    { 
-                        UserId = userId,
-                        ItemName = name, 
-                        Price = price, 
-                        Quantity = quantity 
-                    };
-                    _context.CartItems.Add(cartItem);
-                    _logger.LogInformation("Added new cart item {ItemName} for user {UserEmail}: Price: {Price:C}, Quantity: {Quantity}", 
-                        name, userEmail, price, quantity);
-                    TempData["SuccessMessage"] = $"Added {name} to cart!";
+                    _logger.LogWarning("Invalid item details provided by user {UserEmail}: Name='{ItemName}', Price={Price}, Quantity={Quantity}", 
+                        userEmail, name, price, quantity);
+                    TempData["ErrorMessage"] = "Invalid item details. Please try again.";
                 }
                 
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Cart changes saved to database for user {UserEmail}", userEmail);
+                return RedirectToAction("Index");
             }
-            else
+            catch (Exception ex)
             {
-                _logger.LogWarning("Invalid item details provided by user {UserEmail}: Name='{ItemName}', Price={Price}, Quantity={Quantity}", 
-                    userEmail, name, price, quantity);
-                TempData["ErrorMessage"] = "Invalid item details. Please try again.";
+                var userEmail = User.Identity?.Name ?? "Unknown";
+                _logger.LogError(ex, "Error occurred while adding item {ItemName} to cart for user {UserEmail}", name, userEmail);
+                throw;
             }
-            
-            return RedirectToAction("Index");
         }
 
         // POST: ShoppingCart/RemoveItem
         [HttpPost]
         public async Task<IActionResult> RemoveItem(string name)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userEmail = User.Identity?.Name ?? "Unknown";
-            
-            if (string.IsNullOrEmpty(userId))
+            try
             {
-                _logger.LogWarning("Anonymous user attempted to remove item {ItemName} from cart", name);
-                return RedirectToAction("Login", "Account", new { area = "Identity" });
-            }
-
-            _logger.LogInformation("User {UserEmail} (ID: {UserId}) attempting to remove item {ItemName} from cart", 
-                userEmail, userId, name);
-
-            if (!string.IsNullOrEmpty(name))
-            {
-                var itemToRemove = await _context.CartItems
-                    .FirstOrDefaultAsync(c => c.UserId == userId && c.ItemName.ToLower() == name.ToLower());
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userEmail = User.Identity?.Name ?? "Unknown";
                 
-                if (itemToRemove != null)
+                if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogInformation("Removing cart item {ItemName} (Price: {Price:C}, Quantity: {Quantity}) for user {UserEmail}", 
-                        itemToRemove.ItemName, itemToRemove.Price, itemToRemove.Quantity, userEmail);
+                    _logger.LogWarning("Anonymous user attempted to remove item {ItemName} from cart", name);
+                    return RedirectToAction("Login", "Account", new { area = "Identity" });
+                }
+
+                _logger.LogInformation("User {UserEmail} (ID: {UserId}) attempting to remove item {ItemName} from cart", 
+                    userEmail, userId, name);
+
+                if (!string.IsNullOrEmpty(name))
+                {
+                    var itemToRemove = await _context.CartItems
+                        .FirstOrDefaultAsync(c => c.UserId == userId && c.ItemName.ToLower() == name.ToLower());
                     
-                    _context.CartItems.Remove(itemToRemove);
-                    await _context.SaveChangesAsync();
-                    
-                    _logger.LogInformation("Successfully removed cart item {ItemName} for user {UserEmail}", name, userEmail);
-                    TempData["SuccessMessage"] = $"Removed {name} from cart.";
+                    if (itemToRemove != null)
+                    {
+                        _logger.LogInformation("Removing cart item {ItemName} (Price: {Price:C}, Quantity: {Quantity}) for user {UserEmail}", 
+                            itemToRemove.ItemName, itemToRemove.Price, itemToRemove.Quantity, userEmail);
+                        
+                        _context.CartItems.Remove(itemToRemove);
+                        await _context.SaveChangesAsync();
+                        
+                        _logger.LogInformation("Successfully removed cart item {ItemName} for user {UserEmail}", name, userEmail);
+                        TempData["SuccessMessage"] = $"Removed {name} from cart.";
+                    }
+                    else
+                    {
+                        _logger.LogWarning("User {UserEmail} attempted to remove non-existent item {ItemName} from cart", userEmail, name);
+                        TempData["ErrorMessage"] = "Item not found in cart.";
+                    }
                 }
                 else
                 {
-                    _logger.LogWarning("User {UserEmail} attempted to remove non-existent item {ItemName} from cart", userEmail, name);
-                    TempData["ErrorMessage"] = "Item not found in cart.";
+                    _logger.LogWarning("User {UserEmail} attempted to remove item with empty name from cart", userEmail);
                 }
+                
+                return RedirectToAction("Index");
             }
-            else
+            catch (Exception ex)
             {
-                _logger.LogWarning("User {UserEmail} attempted to remove item with empty name from cart", userEmail);
+                var userEmail = User.Identity?.Name ?? "Unknown";
+                _logger.LogError(ex, "Error occurred while removing item {ItemName} from cart for user {UserEmail}", name, userEmail);
+                throw;
             }
-            
-            return RedirectToAction("Index");
         }
 
         public async Task<bool> Checkout(string shippingOption, string customerAddress)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userEmail = User.Identity?.Name ?? "Unknown";
-            
-            if (string.IsNullOrEmpty(userId))
+            try
             {
-                _logger.LogWarning("Anonymous user attempted to checkout");
-                return false;
-            }
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userEmail = User.Identity?.Name ?? "Unknown";
+                
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Anonymous user attempted to checkout");
+                    return false;
+                }
 
-            _logger.LogInformation("User {UserEmail} (ID: {UserId}) starting checkout process with shipping option: {ShippingOption}, address: {Address}", 
-                userEmail, userId, shippingOption, customerAddress);
+                _logger.LogInformation("User {UserEmail} (ID: {UserId}) starting checkout process with shipping option: {ShippingOption}, address: {Address}", 
+                    userEmail, userId, shippingOption, customerAddress);
 
             var cartItems = await _context.CartItems
                 .Where(c => c.UserId == userId)
@@ -308,6 +337,13 @@ namespace TightlyCoupled.WebShop.Controllers
             }
 
             return true;
+            }
+            catch (Exception ex)
+            {
+                var userEmail = User.Identity?.Name ?? "Unknown";
+                _logger.LogError(ex, "Error occurred during checkout process for user {UserEmail}", userEmail);
+                throw;
+            }
         }
 
         private void SendEmail(string subject, string body)
