@@ -1,0 +1,207 @@
+﻿@{
+    ViewData["Title"] = "Home Page - TightlyCoupled WebShop";
+}
+
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h1 class="display-4">Welcome to TightlyCoupled WebShop</h1>
+        <p class="lead">Discover our amazing products and add them to your cart!</p>
+        <div class="mt-3">
+            <a href="/ShoppingCart" class="btn btn-primary btn-lg me-2">
+                <i class="fas fa-shopping-cart"></i> View Cart
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">Featured Products</h2>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Product 1 -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-laptop fa-4x text-secondary"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Premium Laptop</h5>
+                    <p class="card-text">High-performance laptop perfect for work and gaming. Features latest processor and graphics.</p>
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="h4 text-primary mb-0">$899.99</span>
+                            <small class="text-muted">In Stock</small>
+                        </div>
+                        <form method="post" action="/ShoppingCart/AddItem">
+                            <input type="hidden" name="name" value="Premium Laptop" />
+                            <input type="hidden" name="price" value="899.99" />
+                            <div class="input-group mb-2">
+                                <input type="number" name="quantity" value="1" min="1" max="10" class="form-control" style="max-width: 80px;">
+                                <button type="submit" class="btn btn-success flex-fill">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product 2 -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-mobile-alt fa-4x text-secondary"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Smartphone Pro</h5>
+                    <p class="card-text">Latest smartphone with advanced camera system and long-lasting battery life.</p>
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="h4 text-primary mb-0">$599.99</span>
+                            <small class="text-muted">In Stock</small>
+                        </div>
+                        <form method="post" action="/ShoppingCart/AddItem">
+                            <input type="hidden" name="name" value="Smartphone Pro" />
+                            <input type="hidden" name="price" value="599.99" />
+                            <div class="input-group mb-2">
+                                <input type="number" name="quantity" value="1" min="1" max="10" class="form-control" style="max-width: 80px;">
+                                <button type="submit" class="btn btn-success flex-fill">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product 3 -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-headphones fa-4x text-secondary"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Wireless Headphones</h5>
+                    <p class="card-text">Premium noise-cancelling wireless headphones with superior sound quality.</p>
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="h4 text-primary mb-0">$199.99</span>
+                            <small class="text-muted">In Stock</small>
+                        </div>
+                        <form method="post" action="/ShoppingCart/AddItem">
+                            <input type="hidden" name="name" value="Wireless Headphones" />
+                            <input type="hidden" name="price" value="199.99" />
+                            <div class="input-group mb-2">
+                                <input type="number" name="quantity" value="1" min="1" max="10" class="form-control" style="max-width: 80px;">
+                                <button type="submit" class="btn btn-success flex-fill">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product 4 -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-tablet-alt fa-4x text-secondary"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Tablet Device</h5>
+                    <p class="card-text">Versatile tablet perfect for productivity, creativity, and entertainment on the go.</p>
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="h4 text-primary mb-0">$399.99</span>
+                            <small class="text-muted">In Stock</small>
+                        </div>
+                        <form method="post" action="/ShoppingCart/AddItem">
+                            <input type="hidden" name="name" value="Tablet Device" />
+                            <input type="hidden" name="price" value="399.99" />
+                            <div class="input-group mb-2">
+                                <input type="number" name="quantity" value="1" min="1" max="10" class="form-control" style="max-width: 80px;">
+                                <button type="submit" class="btn btn-success flex-fill">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product 5 -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-keyboard fa-4x text-secondary"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Mechanical Keyboard</h5>
+                    <p class="card-text">Premium mechanical keyboard with RGB lighting and customizable keys for gaming and productivity.</p>
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="h4 text-primary mb-0">$149.99</span>
+                            <small class="text-muted">In Stock</small>
+                        </div>
+                        <form method="post" action="/ShoppingCart/AddItem">
+                            <input type="hidden" name="name" value="Mechanical Keyboard" />
+                            <input type="hidden" name="price" value="149.99" />
+                            <div class="input-group mb-2">
+                                <input type="number" name="quantity" value="1" min="1" max="10" class="form-control" style="max-width: 80px;">
+                                <button type="submit" class="btn btn-success flex-fill">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product 6 -->
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-mouse fa-4x text-secondary"></i>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">Gaming Mouse</h5>
+                    <p class="card-text">High-precision gaming mouse with customizable DPI settings and ergonomic design.</p>
+                    <div class="mt-auto">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="h4 text-primary mb-0">$79.99</span>
+                            <small class="text-muted">In Stock</small>
+                        </div>
+                        <form method="post" action="/ShoppingCart/AddItem">
+                            <input type="hidden" name="name" value="Gaming Mouse" />
+                            <input type="hidden" name="price" value="79.99" />
+                            <div class="input-group mb-2">
+                                <input type="number" name="quantity" value="1" min="1" max="10" class="form-control" style="max-width: 80px;">
+                                <button type="submit" class="btn btn-success flex-fill">
+                                    <i class="fas fa-cart-plus"></i> Add to Cart
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5 mb-4">
+        <div class="alert alert-info">
+            <h5><i class="fas fa-info-circle"></i> Demo Notice</h5>
+            <p class="mb-0">This is a demonstration application. Cart data is temporary and will reset when the application restarts.</p>
+        </div>
+        <a href="/ShoppingCart" class="btn btn-primary btn-lg">
+            <i class="fas fa-shopping-cart"></i> View Your Cart
+        </a>
+    </div>
+</div>
