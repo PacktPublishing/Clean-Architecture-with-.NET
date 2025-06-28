@@ -5,7 +5,7 @@ namespace TightlyCoupled.WebShop.Services
     /// </summary>
     public class PaymentProcessor
     {
-        public string ProcessPayment(double amount)
+        public string ProcessPayment(decimal amount)
         {
             // Simulated payment processing logic
             if (amount > 1000)

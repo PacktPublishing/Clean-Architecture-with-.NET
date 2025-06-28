@@ -7,9 +7,21 @@
         <h1 class="display-4">Welcome to TightlyCoupled WebShop</h1>
         <p class="lead">Discover our amazing products and add them to your cart!</p>
         <div class="mt-3">
-            <a href="/ShoppingCart" class="btn btn-primary btn-lg me-2">
-                <i class="fas fa-shopping-cart"></i> View Cart
-            </a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a href="/ShoppingCart" class="btn btn-primary btn-lg me-2">
+                    <i class="fas fa-shopping-cart"></i> View Cart
+                </a>
+            }
+            else
+            {
+                <a href="/Identity/Account/Login" class="btn btn-outline-primary btn-lg me-2">
+                    <i class="fas fa-sign-in-alt"></i> Login to Shop
+                </a>
+                <a href="/Identity/Account/Register" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus"></i> Register Now
+                </a>
+            }
         </div>
     </div>
 
@@ -39,9 +51,18 @@
                             <input type="hidden" name="price" value="899.99" />
                             <div class="input-group mb-2">
                                 <input type="number" name="quantity" value="1" min="1" max="10" class="form-control" style="max-width: 80px;">
-                                <button type="submit" class="btn btn-success flex-fill">
-                                    <i class="fas fa-cart-plus"></i> Add to Cart
-                                </button>
+                                @if (User.Identity?.IsAuthenticated == true)
+                                {
+                                    <button type="submit" class="btn btn-success flex-fill">
+                                        <i class="fas fa-cart-plus"></i> Add to Cart
+                                    </button>
+                                }
+                                else
+                                {
+                                    <a href="/Identity/Account/Login" class="btn btn-outline-primary flex-fill">
+                                        <i class="fas fa-sign-in-alt"></i> Login to Buy
+                                    </a>
+                                }
                             </div>
                         </form>
                     </div>
@@ -68,9 +89,18 @@
                             <input type="hidden" name="price" value="599.99" />
                             <div class="input-group mb-2">
                                 <input type="number" name="quantity" value="1" min="1" max="10" class="form-control" style="max-width: 80px;">
-                                <button type="submit" class="btn btn-success flex-fill">
-                                    <i class="fas fa-cart-plus"></i> Add to Cart
-                                </button>
+                                @if (User.Identity?.IsAuthenticated == true)
+                                {
+                                    <button type="submit" class="btn btn-success flex-fill">
+                                        <i class="fas fa-cart-plus"></i> Add to Cart
+                                    </button>
+                                }
+                                else
+                                {
+                                    <a href="/Identity/Account/Login" class="btn btn-outline-primary flex-fill">
+                                        <i class="fas fa-sign-in-alt"></i> Login to Buy
+                                    </a>
+                                }
                             </div>
                         </form>
                     </div>
@@ -200,8 +230,20 @@
             <h5><i class="fas fa-info-circle"></i> Demo Notice</h5>
             <p class="mb-0">This is a demonstration application. Cart data is temporary and will reset when the application restarts.</p>
         </div>
-        <a href="/ShoppingCart" class="btn btn-primary btn-lg">
-            <i class="fas fa-shopping-cart"></i> View Your Cart
-        </a>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <a href="/ShoppingCart" class="btn btn-primary btn-lg">
+                <i class="fas fa-shopping-cart"></i> View Your Cart
+            </a>
+        }
+        else
+        {
+            <a href="/Identity/Account/Login" class="btn btn-outline-primary btn-lg me-2">
+                <i class="fas fa-sign-in-alt"></i> Login to Shop
+            </a>
+            <a href="/Identity/Account/Register" class="btn btn-primary btn-lg">
+                <i class="fas fa-user-plus"></i> Register Now
+            </a>
+        }
     </div>
 </div>

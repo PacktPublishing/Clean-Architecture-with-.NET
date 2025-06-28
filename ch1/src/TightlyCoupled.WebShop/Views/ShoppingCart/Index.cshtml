@@ -1,4 +1,4 @@
-@model List<TightlyCoupled.WebShop.Models.Item>
+@model List<TightlyCoupled.WebShop.Models.CartItem>
 @{
     ViewData["Title"] = "Shopping Cart";
 }
@@ -42,22 +42,22 @@
                         </thead>
                         <tbody>
                             @{
-                                double total = 0;
+                                decimal total = 0;
                             }
                             @foreach (var item in Model)
                             {
                                 var subtotal = item.Price * item.Quantity;
                                 total += subtotal;
                                 <tr>
-                                    <td>@item.Name</td>
+                                    <td>@item.ItemName</td>
                                     <td>@item.Price.ToString("C")</td>
                                     <td>@item.Quantity</td>
                                     <td>@subtotal.ToString("C")</td>
                                     <td>
                                         <form method="post" action="/ShoppingCart/RemoveItem" style="display: inline;">
-                                            <input type="hidden" name="name" value="@item.Name" />
+                                            <input type="hidden" name="name" value="@item.ItemName" />
                                             <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                                    onclick="return confirm('Remove @item.Name from cart?')">
+                                                    onclick="return confirm('Remove @item.ItemName from cart?')">
                                                 Remove
                                             </button>
                                         </form>

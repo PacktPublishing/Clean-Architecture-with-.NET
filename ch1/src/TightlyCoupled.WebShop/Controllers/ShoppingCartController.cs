@@ -1,36 +1,61 @@
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Claims;
 using MailKit.Net.Smtp;
 using MimeKit;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TightlyCoupled.WebShop.Data;
 using TightlyCoupled.WebShop.Models;
 using TightlyCoupled.WebShop.Services;
 
 namespace TightlyCoupled.WebShop.Controllers
 {
+    [Authorize]
     public class ShoppingCartController : Controller
     {
-        public List<Item> Items { get; set; } = new List<Item>();
+        private readonly ApplicationDbContext _context;
+
+        public ShoppingCartController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
 
         // GET: ShoppingCart
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            // TODO: In the future, get the cart for the current authenticated user
-            // For now, return the current cart items
-            return View(Items);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login", "Account", new { area = "Identity" });
+            }
+
+            var cartItems = await _context.CartItems
+                .Where(c => c.UserId == userId)
+                .ToListAsync();
+
+            return View(cartItems);
         }
 
         // POST: ShoppingCart/AddItem
         [HttpPost]
-        public IActionResult AddItem(string name, double price, int quantity = 1)
+        public async Task<IActionResult> AddItem(string name, decimal price, int quantity = 1)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login", "Account", new { area = "Identity" });
+            }
+
             if (!string.IsNullOrEmpty(name) && price > 0 && quantity > 0)
             {
                 // Check if item already exists in cart
-                var existingItem = Items.FirstOrDefault(i => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                var existingItem = await _context.CartItems
+                    .FirstOrDefaultAsync(c => c.UserId == userId && c.ItemName.ToLower() == name.ToLower());
+                
                 if (existingItem != null)
                 {
                     existingItem.Quantity += quantity;
@@ -38,9 +63,18 @@ namespace TightlyCoupled.WebShop.Controllers
                 }
                 else
                 {
-                    Items.Add(new Item { Name = name, Price = price, Quantity = quantity });
+                    var cartItem = new CartItem 
+                    { 
+                        UserId = userId,
+                        ItemName = name, 
+                        Price = price, 
+                        Quantity = quantity 
+                    };
+                    _context.CartItems.Add(cartItem);
                     TempData["SuccessMessage"] = $"Added {name} to cart!";
                 }
+                
+                await _context.SaveChangesAsync();
             }
             else
             {
@@ -52,14 +86,23 @@ namespace TightlyCoupled.WebShop.Controllers
 
         // POST: ShoppingCart/RemoveItem
         [HttpPost]
-        public IActionResult RemoveItem(string name)
+        public async Task<IActionResult> RemoveItem(string name)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login", "Account", new { area = "Identity" });
+            }
+
             if (!string.IsNullOrEmpty(name))
             {
-                var itemToRemove = Items.FirstOrDefault(i => i.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                var itemToRemove = await _context.CartItems
+                    .FirstOrDefaultAsync(c => c.UserId == userId && c.ItemName.ToLower() == name.ToLower());
+                
                 if (itemToRemove != null)
                 {
-                    Items.Remove(itemToRemove);
+                    _context.CartItems.Remove(itemToRemove);
+                    await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = $"Removed {name} from cart.";
                 }
                 else
@@ -71,14 +114,29 @@ namespace TightlyCoupled.WebShop.Controllers
             return RedirectToAction("Index");
         }
 
-        public bool Checkout(string shippingOption, string customerAddress)
+        public async Task<bool> Checkout(string shippingOption, string customerAddress)
         {
-            double totalPrice = 0;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return false;
+            }
+
+            var cartItems = await _context.CartItems
+                .Where(c => c.UserId == userId)
+                .ToListAsync();
+
+            if (!cartItems.Any())
+            {
+                return false;
+            }
+
+            decimal totalPrice = 0;
 
             // Validate the items in the cart
-            foreach (var item in Items)
+            foreach (var item in cartItems)
             {
-                if (string.IsNullOrEmpty(item.Name))
+                if (string.IsNullOrEmpty(item.ItemName))
                 {
                     Console.WriteLine("Invalid item found in cart.");
                     return false;
@@ -86,18 +144,18 @@ namespace TightlyCoupled.WebShop.Controllers
             }
 
             // Calculate total price based on item price and quantity
-            foreach (var item in Items)
+            foreach (var item in cartItems)
             {
                 totalPrice += item.Price * item.Quantity;
             }
 
             // Call an internal HTTP service to get tax rate
             HttpClient httpClient = new HttpClient();
-            double taxRate = 0;
+            decimal taxRate = 0;
             try
             {
                 var response = httpClient.GetStringAsync($"http://taxservice.example.com/getTaxRate?address={customerAddress}").Result;
-                taxRate = Convert.ToDouble(response);
+                taxRate = Convert.ToDecimal(response);
             }
             catch (Exception ex)
             {
@@ -106,7 +164,7 @@ namespace TightlyCoupled.WebShop.Controllers
             }
 
             // Calculate shipping costs
-            double shippingCost = 0;
+            decimal shippingCost = 0;
             if (shippingOption == "Express")
             {
                 shippingCost = 25;
@@ -119,47 +177,66 @@ namespace TightlyCoupled.WebShop.Controllers
             // Add tax and shipping to the total price
             totalPrice += (totalPrice * taxRate) + shippingCost;
 
-            // Using Entity Framework with transaction support
-            using (var dbContext = new DbContext("connectionStringHere"))
+            // Using Entity Framework Core with transaction support
+            using (var transaction = await _context.Database.BeginTransactionAsync())
             {
-                using (var transaction = dbContext.Database.BeginTransaction())
+                try
                 {
-                    try
+                    // Create order with order items
+                    var order = new Order 
+                    { 
+                        UserId = userId,
+                        CustomerAddress = customerAddress,
+                        ShippingOption = shippingOption,
+                        TotalAmount = totalPrice,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                    
+                    _context.Orders.Add(order);
+                    await _context.SaveChangesAsync(); // Save to get order ID
+
+                    // Add order items
+                    foreach (var cartItem in cartItems)
                     {
-                        foreach (var item in Items)
+                        // Simulate updating the stock
+                        Console.WriteLine($"Reducing stock for item: {cartItem.ItemName}");
+
+                        var orderItem = new OrderItem
                         {
-                            // Simulate updating the stock
-                            Console.WriteLine($"Reducing stock for item: {item.Name}");
-
-                            // Simulate saving the order
-                            dbContext.Set<Order>().Add(new Order { /* properties here */ });
-                        }
-
-                        dbContext.SaveChanges();
-
-                        // Process payment
-                        var paymentProcessor = new PaymentProcessor();
-                        var paymentResult = paymentProcessor.ProcessPayment(totalPrice);
-
-                        if (paymentResult == "Declined")
-                        {
-                            Console.WriteLine("Payment declined. Transaction rolled back.");
-                            SendEmail("Order Failed", "Your payment was declined.");
-                            transaction.Rollback();
-                            return false;
-                        }
-
-                        Console.WriteLine("Payment processed successfully.");
-                        SendEmail("Order Confirmation", "Your order has been placed.");
-                        transaction.Commit();
+                            OrderId = order.Id,
+                            ItemName = cartItem.ItemName,
+                            Price = cartItem.Price,
+                            Quantity = cartItem.Quantity
+                        };
+                        _context.OrderItems.Add(orderItem);
                     }
-                    catch (Exception ex)
+
+                    // Clear the cart
+                    _context.CartItems.RemoveRange(cartItems);
+                    await _context.SaveChangesAsync();
+
+                    // Process payment
+                    var paymentProcessor = new PaymentProcessor();
+                    var paymentResult = paymentProcessor.ProcessPayment(totalPrice);
+
+                    if (paymentResult == "Declined")
                     {
-                        Console.WriteLine($"An error occurred: {ex.Message}");
-                        SendEmail("Order Failed", "An error occurred during the order process.");
-                        transaction.Rollback();
+                        Console.WriteLine("Payment declined. Transaction rolled back.");
+                        SendEmail("Order Failed", "Your payment was declined.");
+                        await transaction.RollbackAsync();
                         return false;
                     }
+
+                    Console.WriteLine("Payment processed successfully.");
+                    SendEmail("Order Confirmation", "Your order has been placed.");
+                    await transaction.CommitAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An error occurred: {ex.Message}");
+                    SendEmail("Order Failed", "An error occurred during the order process.");
+                    await transaction.RollbackAsync();
+                    return false;
                 }
             }
 
