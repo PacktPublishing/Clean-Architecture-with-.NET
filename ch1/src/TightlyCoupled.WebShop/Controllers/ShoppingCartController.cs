@@ -6,16 +6,11 @@ using System.Net.Http;
 using MailKit.Net.Smtp;
 using MimeKit;
 using Microsoft.AspNetCore.Mvc;
+using TightlyCoupled.WebShop.Models;
+using TightlyCoupled.WebShop.Services;
 
 namespace TightlyCoupled.WebShop.Controllers
 {
-    public class Item
-    {
-        public string Name { get; set; } = string.Empty;
-        public double Price { get; set; }
-        public int Quantity { get; set; }
-    }
-
     public class ShoppingCartController : Controller
     {
         public List<Item> Items { get; set; } = new List<Item>();
@@ -193,25 +188,5 @@ namespace TightlyCoupled.WebShop.Controllers
                 Console.WriteLine($"Email could not be sent: {ex.Message}");
             }
         }
-    }
-
-    // Dummy PaymentProcessor class
-    public class PaymentProcessor
-    {
-        public string ProcessPayment(double amount)
-        {
-            // Simulated payment processing logic
-            if (amount > 1000)
-            {
-                return "Declined";
-            }
-            return "Approved";
-        }
-    }
-
-    // Dummy Order class to simulate EF DbContext
-    public class Order
-    {
-        // properties here
     }
 }
