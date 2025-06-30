@@ -1,4 +1,11 @@
-# Chapter 1
+# Chapter 1 - Understanding the Limitations of Tightly Coupled Architectures
+
+## Main Points
+
+- Limitations of Tightly Coupled Architectures
+- Overcoming its Challenges
+- The need for a paradigm shift
+- Exploring Clean Arch as an alternative
 
 ## Questions
 
