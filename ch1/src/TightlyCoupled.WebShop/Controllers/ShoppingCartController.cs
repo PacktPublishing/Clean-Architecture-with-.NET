@@ -384,8 +384,51 @@ namespace TightlyCoupled.WebShop.Controllers
                 // Swallow email errors
             }
         }
+        
+        // Manager approval email - another hard-coded coupling
+        private void SendManagerApprovalEmail(string userEmail, decimal orderAmount, string approvalFilePath)
+        {
+            try
+            {
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress("WebShop Approval System", EMAIL_USERNAME));
+                message.To.Add(new MailboxAddress("Manager", "manager@company.com")); // Hard-coded manager email
+                message.Subject = $"Order Approval Required - {orderAmount:C}";
+                message.Body = new TextPart("plain") 
+                { 
+                    Text = $@"
+Manager Approval Required
 
-        // Simplified methods for the rest - keeping the original functionality
+Customer: {userEmail}
+Order Amount: {orderAmount:C}
+Request Time: {DateTime.Now}
+Approval File: {approvalFilePath}
+
+Please review and approve/reject this order.
+
+To approve: Reply with 'APPROVE {Path.GetFileNameWithoutExtension(approvalFilePath)}'
+To reject: Reply with 'REJECT {Path.GetFileNameWithoutExtension(approvalFilePath)}'
+
+Best regards,
+WebShop System"
+                };
+
+                using (var smtpClient = new SmtpClient())
+                {
+                    smtpClient.Connect(SMTP_SERVER, SMTP_PORT, false);
+                    smtpClient.Authenticate(EMAIL_USERNAME, EMAIL_PASSWORD);
+                    smtpClient.Send(message);
+                    smtpClient.Disconnect(true);
+                }
+                
+                WriteToLogFile($"[{DateTime.Now}] APPROVAL EMAIL: Sent to manager for {userEmail}");
+            }
+            catch (Exception ex)
+            {
+                WriteToLogFile($"[{DateTime.Now}] APPROVAL EMAIL ERROR: {ex.Message}");
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> RemoveItem(string name)
         {
@@ -409,69 +452,525 @@ namespace TightlyCoupled.WebShop.Controllers
             return RedirectToAction("Index");
         }
 
-        public async Task<bool> Checkout(string shippingOption, string customerAddress)
+        public bool Checkout(string shippingOption, string customerAddress)
         {
-            // Keep original checkout logic but add more tight coupling
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var userEmail = User.Identity?.Name ?? "Unknown";
-            
-            WriteToLogFile($"[{DateTime.Now}] User {userEmail} starting checkout");
-            
-            var cartItems = await _context.CartItems.Where(c => c.UserId == userId).ToListAsync();
-            
-            if (!cartItems.Any()) return false;
-
-            decimal totalPrice = cartItems.Sum(item => item.Price * item.Quantity);
-
-            // Hard-coded tax service call
-            HttpClient httpClient = new HttpClient();
-            decimal taxRate = 0;
             try
             {
-                var response = httpClient.GetStringAsync($"{TAX_SERVICE_URL}/getTaxRate?address={customerAddress}").Result;
-                taxRate = Convert.ToDecimal(response);
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userEmail = User.Identity?.Name ?? "Unknown";
+                
+                // Update global state - bad practice from UserStatsViewComponent
+                GlobalUtilities.CurrentUser = userEmail;
+                GlobalUtilities.LastActivity = DateTime.Now;
+                
+                WriteToLogFile($"[{DateTime.Now}] CHECKOUT STARTED: User {userEmail} with shipping {shippingOption} to {customerAddress}");
+                
+                if (string.IsNullOrEmpty(userId))
+                {
+                    WriteToLogFile($"[{DateTime.Now}] SECURITY: Anonymous checkout attempt");
+                    return false;
+                }
+
+                // Business rule validation using file-based config - tight coupling
+                var configLines = System.IO.File.ReadAllLines(CONFIG_FILE_PATH);
+                var maxOrderValue = decimal.Parse(configLines.FirstOrDefault(l => l.StartsWith("max_order_value="))?.Split('=')[1] ?? "5000");
+                var requiresManagerApproval = bool.Parse(configLines.FirstOrDefault(l => l.StartsWith("manager_approval_required="))?.Split('=')[1] ?? "false");
+                
+                // Direct SQL query instead of using EF - SQL injection vulnerability
+                var cartItems = new List<CartItem>();
+                decimal subtotal = 0;
+                
+                using (var connection = new SqlConnection(DB_CONNECTION))
+                {
+                    connection.Open();
+                    // Terrible SQL with injection vulnerability
+                    var sql = $@"
+                        SELECT ci.Id, ci.UserId, ci.ItemName, ci.Price, ci.Quantity, ci.DateAdded,
+                               CASE WHEN ci.ItemName LIKE '%premium%' THEN ci.Price * 1.2 ELSE ci.Price END as AdjustedPrice
+                        FROM CartItems ci
+                        INNER JOIN AspNetUsers u ON ci.UserId = u.Id  
+                        WHERE u.Email = '{userEmail}'
+                        ORDER BY ci.DateAdded";
+                    
+                    var command = new SqlCommand(sql, connection);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var item = new CartItem
+                            {
+                                Id = (int)reader["Id"],
+                                UserId = reader["UserId"].ToString()!,
+                                ItemName = reader["ItemName"].ToString()!,
+                                Price = (decimal)reader["AdjustedPrice"], // Use adjusted price
+                                Quantity = (int)reader["Quantity"],
+                                DateAdded = (DateTime)reader["DateAdded"]
+                            };
+                            cartItems.Add(item);
+                            subtotal += item.Price * item.Quantity;
+                        }
+                    }
+                }
+
+                if (!cartItems.Any())
+                {
+                    WriteToLogFile($"[{DateTime.Now}] CHECKOUT FAILED: Empty cart for {userEmail}");
+                    return false;
+                }
+
+                WriteToLogFile($"[{DateTime.Now}] Cart loaded: {cartItems.Count} items, subtotal: {subtotal:C}");
+
+                // Complex business rules hard-coded in controller
+                var isVipCustomer = subtotal > 1000;
+                var isWeekend = DateTime.Now.DayOfWeek == DayOfWeek.Saturday || DateTime.Now.DayOfWeek == DayOfWeek.Sunday;
+                var isBusinessHours = GlobalUtilities.IsBusinessHours();
+                var isHolidaySeason = DateTime.Now.Month == 12;
+                
+                // Weekend surcharge - business logic mixed with infrastructure
+                if (isWeekend && !isVipCustomer)
+                {
+                    subtotal *= 1.05m; // 5% weekend surcharge
+                    WriteToLogFile($"[{DateTime.Now}] SURCHARGE: Weekend surcharge applied to {userEmail}");
+                }
+
+                // Holiday season bonus - more business logic
+                if (isHolidaySeason)
+                {
+                    subtotal *= 0.95m; // 5% holiday discount
+                    WriteToLogFile($"[{DateTime.Now}] DISCOUNT: Holiday discount applied to {userEmail}");
+                }
+
+                // Check order value limits
+                if (subtotal > maxOrderValue)
+                {
+                    WriteToLogFile($"[{DateTime.Now}] ORDER LIMIT EXCEEDED: {userEmail} attempted {subtotal:C} > {maxOrderValue:C}");
+                    SendEmail("Order Rejected", $"Your order of {subtotal:C} exceeds our limit of {maxOrderValue:C}");
+                    return false;
+                }
+
+                // Manager approval for large orders - workflow logic in controller
+                if (requiresManagerApproval && subtotal > 2000)
+                {
+                    // Create approval request file - file system dependency
+                    var approvalFile = Path.Combine(GlobalUtilities.DATA_DIRECTORY, "approvals", $"approval_{userId}_{DateTime.Now:yyyyMMddHHmmss}.json");
+                    Directory.CreateDirectory(Path.GetDirectoryName(approvalFile)!);
+                    
+                    var approvalRequest = new
+                    {
+                        UserId = userId,
+                        UserEmail = userEmail,
+                        OrderAmount = subtotal,
+                        RequestedAt = DateTime.Now,
+                        Items = cartItems.Select(i => new { i.ItemName, i.Quantity, i.Price }).ToArray()
+                    };
+                    
+                    System.IO.File.WriteAllText(approvalFile, JsonSerializer.Serialize(approvalRequest, new JsonSerializerOptions { WriteIndented = true }));
+                    WriteToLogFile($"[{DateTime.Now}] APPROVAL REQUIRED: Request saved for {userEmail}");
+                    
+                    // Send approval email to manager - hard-coded recipient
+                    SendManagerApprovalEmail(userEmail, subtotal, approvalFile);
+                    return false; // Order pending approval
+                }
+
+                // Multiple external service calls - all blocking and synchronous
+                decimal taxRate = 0;
+                decimal shippingCost = 0;
+                string courierService = "";
+                
+                // Tax service call with retry logic - but still blocking
+                for (int attempt = 1; attempt <= 3; attempt++)
+                {
+                    try
+                    {
+                        WriteToLogFile($"[{DateTime.Now}] TAX SERVICE: Attempt {attempt} for {userEmail}");
+                        var httpClient = new HttpClient();
+                        httpClient.Timeout = TimeSpan.FromSeconds(10);
+                        
+                        var taxRequest = new
+                        {
+                            address = customerAddress,
+                            amount = subtotal,
+                            customerType = isVipCustomer ? "VIP" : "Standard",
+                            items = cartItems.Select(i => new { name = i.ItemName, category = "General" }).ToArray()
+                        };
+                        
+                        var content = new StringContent(JsonSerializer.Serialize(taxRequest), Encoding.UTF8, "application/json");
+                        var response = httpClient.PostAsync($"{TAX_SERVICE_URL}/calculateTax", content).Result;
+                        
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var taxResponse = response.Content.ReadAsStringAsync().Result;
+                            var taxData = JsonSerializer.Deserialize<dynamic>(taxResponse);
+                            taxRate = Convert.ToDecimal(taxData?.GetProperty("rate").GetDecimal() ?? 0.08m);
+                            WriteToLogFile($"[{DateTime.Now}] TAX RATE: {taxRate:P} for {userEmail}");
+                            break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteToLogFile($"[{DateTime.Now}] TAX SERVICE ERROR (Attempt {attempt}): {ex.Message}");
+                        if (attempt == 3)
+                        {
+                            taxRate = isVipCustomer ? 0.05m : 0.08m; // Fallback rates
+                            WriteToLogFile($"[{DateTime.Now}] TAX FALLBACK: Using {taxRate:P} for {userEmail}");
+                        }
+                        Thread.Sleep(1000 * attempt); // Linear backoff - blocking
+                    }
+                }
+
+                // Shipping service call - another external dependency
+                try
+                {
+                    WriteToLogFile($"[{DateTime.Now}] SHIPPING SERVICE: Calculating for {userEmail}");
+                    var shippingClient = new HttpClient();
+                    shippingClient.Timeout = TimeSpan.FromSeconds(15);
+                    
+                    var shippingRequest = new
+                    {
+                        destination = customerAddress,
+                        weight = cartItems.Sum(i => i.Quantity) * 0.5, // Assume 0.5 lbs per item
+                        priority = shippingOption,
+                        isVip = isVipCustomer
+                    };
+                    
+                    var shippingContent = new StringContent(JsonSerializer.Serialize(shippingRequest), Encoding.UTF8, "application/json");
+                    var shippingResponse = shippingClient.PostAsync("http://shipping.company.com/api/calculate", shippingContent).Result;
+                    
+                    if (shippingResponse.IsSuccessStatusCode)
+                    {
+                        var shippingData = JsonSerializer.Deserialize<dynamic>(shippingResponse.Content.ReadAsStringAsync().Result);
+                        shippingCost = Convert.ToDecimal(shippingData?.GetProperty("cost").GetDecimal() ?? 10m);
+                        courierService = shippingData?.GetProperty("courier").GetString() ?? "Standard";
+                    }
+                    else
+                    {
+                        // Hard-coded fallback shipping costs
+                        shippingCost = shippingOption == "Express" ? (isVipCustomer ? 20 : 25) : (isVipCustomer ? 5 : 10);
+                        courierService = shippingOption == "Express" ? "FedEx" : "USPS";
+                    }
+                    
+                    WriteToLogFile($"[{DateTime.Now}] SHIPPING: {shippingCost:C} via {courierService} for {userEmail}");
+                }
+                catch (Exception ex)
+                {
+                    WriteToLogFile($"[{DateTime.Now}] SHIPPING ERROR: {ex.Message}");
+                    shippingCost = shippingOption == "Express" ? 25 : 10; // Hard-coded fallback
+                    courierService = "Standard";
+                }
+
+                // Calculate final total with complex business rules
+                var taxAmount = subtotal * taxRate;
+                var totalPrice = subtotal + taxAmount + shippingCost;
+                
+                // VIP discount applied after taxes - more business logic
+                if (isVipCustomer && totalPrice > 500)
+                {
+                    var vipDiscount = totalPrice * 0.02m; // 2% VIP discount
+                    totalPrice -= vipDiscount;
+                    WriteToLogFile($"[{DateTime.Now}] VIP DISCOUNT: {vipDiscount:C} applied to {userEmail}");
+                }
+
+                WriteToLogFile($"[{DateTime.Now}] PRICING: Subtotal={subtotal:C}, Tax={taxAmount:C}, Shipping={shippingCost:C}, Total={totalPrice:C}");
+
+                // Inventory management via XML files - file system coupling
+                foreach (var item in cartItems)
+                {
+                    try
+                    {
+                        UpdateInventoryFile(item.ItemName, item.Quantity);
+                        
+                        // Also log to separate inventory tracking file
+                        var inventoryLogFile = Path.Combine(GlobalUtilities.DATA_DIRECTORY, "inventory_transactions.log");
+                        var inventoryEntry = $"[{DateTime.Now}] CHECKOUT: -{item.Quantity} {item.ItemName} for order by {userEmail}";
+                        System.IO.File.AppendAllText(inventoryLogFile, inventoryEntry + Environment.NewLine);
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteToLogFile($"[{DateTime.Now}] INVENTORY ERROR: {ex.Message} for item {item.ItemName}");
+                        // Continue processing even if inventory update fails
+                    }
+                }
+
+                // Payment processing with multiple attempts and different payment methods
+                string paymentResult = "";
+                string paymentMethod = totalPrice > 1000 ? "CreditCard" : "DebitCard";
+                
+                for (int paymentAttempt = 1; paymentAttempt <= 2; paymentAttempt++)
+                {
+                    try
+                    {
+                        WriteToLogFile($"[{DateTime.Now}] PAYMENT: Attempt {paymentAttempt} using {paymentMethod} for {userEmail}");
+                        
+                        var paymentProcessor = new PaymentProcessor();
+                        
+                        // Different payment logic based on amount and customer type
+                        if (isVipCustomer && totalPrice > 2000)
+                        {
+                            // VIP customers get special payment processing
+                            paymentResult = paymentProcessor.ProcessVipPayment(totalPrice, userEmail);
+                        }
+                        else if (totalPrice > 1000)
+                        {
+                            // Large orders get different processing
+                            paymentResult = paymentProcessor.ProcessLargePayment(totalPrice);
+                        }
+                        else
+                        {
+                            // Standard payment processing
+                            paymentResult = paymentProcessor.ProcessPayment(totalPrice);
+                        }
+                        
+                        WriteToLogFile($"[{DateTime.Now}] PAYMENT RESULT: {paymentResult} for {userEmail}");
+                        
+                        if (paymentResult == "Approved")
+                        {
+                            break;
+                        }
+                        else if (paymentResult == "Declined" && paymentAttempt == 1)
+                        {
+                            // Try different payment method on first failure
+                            paymentMethod = "CreditCard";
+                            WriteToLogFile($"[{DateTime.Now}] PAYMENT: Retrying with {paymentMethod} for {userEmail}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteToLogFile($"[{DateTime.Now}] PAYMENT EXCEPTION: {ex.Message}");
+                        paymentResult = "Error";
+                    }
+                }
+
+                if (paymentResult != "Approved")
+                {
+                    WriteToLogFile($"[{DateTime.Now}] PAYMENT FAILED: {paymentResult} for {userEmail}");
+                    
+                    // Send failure notification with detailed information
+                    var failureEmail = $@"
+Payment Failed
+
+Dear Customer,
+
+Your payment of {totalPrice:C} was {paymentResult.ToLower()}.
+
+Order Details:
+- Items: {cartItems.Count}
+- Subtotal: {subtotal:C}
+- Tax: {taxAmount:C}
+- Shipping: {shippingCost:C}
+- Total: {totalPrice:C}
+- Payment Method: {paymentMethod}
+
+Please try again or contact customer service.
+
+Best regards,
+WebShop Team";
+                    
+                    SendEmail("Payment Failed", failureEmail);
+                    
+                    // Also save failure details to file for analysis
+                    var failureFile = Path.Combine(GlobalUtilities.DATA_DIRECTORY, "payment_failures", $"failure_{userId}_{DateTime.Now:yyyyMMddHHmmss}.json");
+                    Directory.CreateDirectory(Path.GetDirectoryName(failureFile)!);
+                    
+                    var failureData = new
+                    {
+                        UserId = userId,
+                        UserEmail = userEmail,
+                        Amount = totalPrice,
+                        Result = paymentResult,
+                        PaymentMethod = paymentMethod,
+                        Timestamp = DateTime.Now,
+                        CartItems = cartItems.Count,
+                        IsVip = isVipCustomer
+                    };
+                    
+                    System.IO.File.WriteAllText(failureFile, JsonSerializer.Serialize(failureData, new JsonSerializerOptions { WriteIndented = true }));
+                    
+                    return false;
+                }
+
+                // Create order using direct SQL instead of EF for "performance" - more tight coupling
+                int orderId = 0;
+                using (var connection = new SqlConnection(DB_CONNECTION))
+                {
+                    connection.Open();
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        try
+                        {
+                            // Insert order with SQL injection vulnerability
+                            var orderSql = $@"
+                                INSERT INTO Orders (UserId, CustomerAddress, ShippingOption, TotalAmount, CreatedDate, CourierService, PaymentMethod, IsVipOrder)
+                                VALUES ('{userId}', '{customerAddress}', '{shippingOption}', {totalPrice}, '{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}', '{courierService}', '{paymentMethod}', {(isVipCustomer ? 1 : 0)});
+                                SELECT SCOPE_IDENTITY();";
+                            
+                            var orderCommand = new SqlCommand(orderSql, connection, transaction);
+                            orderId = Convert.ToInt32(orderCommand.ExecuteScalar());
+                            
+                            WriteToLogFile($"[{DateTime.Now}] ORDER CREATED: {orderId} for {userEmail}");
+
+                            // Insert order items
+                            foreach (var item in cartItems)
+                            {
+                                var itemSql = $@"
+                                    INSERT INTO OrderItems (OrderId, ItemName, Price, Quantity)
+                                    VALUES ({orderId}, '{item.ItemName}', {item.Price}, {item.Quantity})";
+                                
+                                var itemCommand = new SqlCommand(itemSql, connection, transaction);
+                                itemCommand.ExecuteNonQuery();
+                            }
+
+                            // Clear cart items
+                            var clearCartSql = $"DELETE FROM CartItems WHERE UserId = '{userId}'";
+                            var clearCommand = new SqlCommand(clearCartSql, connection, transaction);
+                            clearCommand.ExecuteNonQuery();
+
+                            transaction.Commit();
+                            WriteToLogFile($"[{DateTime.Now}] ORDER COMMITTED: {orderId} for {userEmail}");
+                        }
+                        catch (Exception ex)
+                        {
+                            transaction.Rollback();
+                            WriteToLogFile($"[{DateTime.Now}] ORDER ROLLBACK: {ex.Message}");
+                            throw;
+                        }
+                    }
+                }
+
+                // Post-order processing - multiple external service calls
+                
+                // Analytics tracking
+                SendAnalyticsData(userEmail, "Checkout", $"Order-{orderId}", cartItems.Count, totalPrice);
+                
+                // Warehouse notification for fulfillment
+                try
+                {
+                    var warehouseClient = new HttpClient();
+                    var warehouseData = new
+                    {
+                        orderId = orderId,
+                        customerEmail = userEmail,
+                        items = cartItems.Select(i => new { name = i.ItemName, quantity = i.Quantity }).ToArray(),
+                        shippingAddress = customerAddress,
+                        courierService = courierService,
+                        priority = isVipCustomer ? "High" : "Normal"
+                    };
+                    
+                    var warehouseContent = new StringContent(JsonSerializer.Serialize(warehouseData), Encoding.UTF8, "application/json");
+                    var warehouseResponse = warehouseClient.PostAsync("http://warehouse.company.com/api/fulfill", warehouseContent).Result;
+                    
+                    WriteToLogFile($"[{DateTime.Now}] WAREHOUSE: Notification sent for order {orderId}");
+                }
+                catch (Exception ex)
+                {
+                    WriteToLogFile($"[{DateTime.Now}] WAREHOUSE ERROR: {ex.Message}");
+                }
+
+                // CRM system update
+                try
+                {
+                    var crmClient = new HttpClient();
+                    var crmData = new
+                    {
+                        customerEmail = userEmail,
+                        orderValue = totalPrice,
+                        orderDate = DateTime.Now,
+                        isVip = isVipCustomer,
+                        itemsPurchased = cartItems.Count
+                    };
+                    
+                    var crmContent = new StringContent(JsonSerializer.Serialize(crmData), Encoding.UTF8, "application/json");
+                    var crmResponse = crmClient.PostAsync("http://crm.company.com/api/update-customer", crmContent).Result;
+                    
+                    WriteToLogFile($"[{DateTime.Now}] CRM: Customer data updated for {userEmail}");
+                }
+                catch (Exception ex)
+                {
+                    WriteToLogFile($"[{DateTime.Now}] CRM ERROR: {ex.Message}");
+                }
+
+                // Save order summary to file for backup
+                var orderSummary = new
+                {
+                    OrderId = orderId,
+                    CustomerEmail = userEmail,
+                    Subtotal = subtotal,
+                    Tax = taxAmount,
+                    Shipping = shippingCost,
+                    Total = totalPrice,
+                    Items = cartItems.Select(i => new { i.ItemName, i.Quantity, i.Price }).ToArray(),
+                    ProcessedAt = DateTime.Now,
+                    CourierService = courierService,
+                    PaymentMethod = paymentMethod,
+                    IsVip = isVipCustomer
+                };
+                
+                var orderSummaryFile = Path.Combine(GlobalUtilities.DATA_DIRECTORY, "order_summaries", $"order_{orderId}_{DateTime.Now:yyyyMMdd}.json");
+                Directory.CreateDirectory(Path.GetDirectoryName(orderSummaryFile)!);
+                System.IO.File.WriteAllText(orderSummaryFile, JsonSerializer.Serialize(orderSummary, new JsonSerializerOptions { WriteIndented = true }));
+
+                // Send detailed confirmation email
+                var confirmationEmail = $@"
+Order Confirmation - #{orderId}
+
+Dear {userEmail.Split('@')[0]},
+
+Thank you for your order! Here are the details:
+
+Order Number: {orderId}
+Order Date: {DateTime.Now:yyyy-MM-dd HH:mm}
+Customer Status: {(isVipCustomer ? "VIP Customer" : "Standard Customer")}
+
+Items Ordered:
+{string.Join("\n", cartItems.Select(i => $"- {i.ItemName} x{i.Quantity} @ {i.Price:C} = {i.Price * i.Quantity:C}"))}
+
+Pricing Breakdown:
+- Subtotal: {subtotal:C}
+- Tax ({taxRate:P}): {taxAmount:C}
+- Shipping via {courierService}: {shippingCost:C}
+- TOTAL: {totalPrice:C}
+
+Shipping Information:
+- Method: {shippingOption}
+- Courier: {courierService}
+- Address: {customerAddress}
+- Estimated Delivery: {(shippingOption == "Express" ? DateTime.Now.AddDays(1).ToString("yyyy-MM-dd") : DateTime.Now.AddDays(3).ToString("yyyy-MM-dd"))}
+
+Payment Method: {paymentMethod}
+
+{(isVipCustomer ? "As a VIP customer, you've received priority processing and special discounts!" : "Thank you for choosing our service!")}
+
+You can track your order at: http://tracking.company.com/order/{orderId}
+
+Best regards,
+The WebShop Team
+
+Order processed on {Environment.MachineName} at {DateTime.Now}
+";
+
+                SendEmail($"Order Confirmation #{orderId}", confirmationEmail);
+
+                WriteToLogFile($"[{DateTime.Now}] CHECKOUT COMPLETE: Order {orderId} for {userEmail} - Total: {totalPrice:C}");
+                
+                // Update global statistics
+                GlobalUtilities.ErrorCount = 0; // Reset error count on successful order
+                
+                return true;
             }
-            catch
+            catch (Exception ex)
             {
-                taxRate = 0.08m; // Default tax rate
+                var userEmail = User.Identity?.Name ?? "Unknown";
+                WriteToLogFile($"[{DateTime.Now}] CHECKOUT EXCEPTION: {ex.Message} for {userEmail}");
+                
+                // Send detailed error report to admin
+                SendErrorNotificationToWarehouse(userEmail, $"Checkout failed: {ex.Message}\n\nStack Trace:\n{ex.StackTrace}");
+                
+                // Also save error details for debugging
+                var errorFile = Path.Combine(GlobalUtilities.LOG_DIRECTORY, $"checkout_errors_{DateTime.Now:yyyy-MM-dd}.log");
+                var errorDetails = $"[{DateTime.Now}] CHECKOUT ERROR for {userEmail}:\n{ex}\n\n";
+                System.IO.File.AppendAllText(errorFile, errorDetails);
+                
+                throw; // Re-throw for controller error handling
             }
-
-            decimal shippingCost = shippingOption == "Express" ? 25 : 10;
-            totalPrice += (totalPrice * taxRate) + shippingCost;
-
-            // Process payment with hard-coded service
-            var paymentProcessor = new PaymentProcessor();
-            var paymentResult = paymentProcessor.ProcessPayment(totalPrice);
-
-            if (paymentResult == "Declined")
-            {
-                SendEmail("Order Failed", "Your payment was declined.");
-                WriteToLogFile($"[{DateTime.Now}] PAYMENT DECLINED for {userEmail}");
-                return false;
-            }
-
-            // Create order using EF
-            var order = new Order 
-            { 
-                UserId = userId,
-                CustomerAddress = customerAddress,
-                ShippingOption = shippingOption,
-                TotalAmount = totalPrice,
-                CreatedDate = DateTime.UtcNow
-            };
-            
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
-
-            // Clear cart
-            _context.CartItems.RemoveRange(cartItems);
-            await _context.SaveChangesAsync();
-
-            SendEmail("Order Confirmation", "Your order has been placed.");
-            SendAnalyticsData(userEmail, "Checkout", "", cartItems.Count, totalPrice);
-            WriteToLogFile($"[{DateTime.Now}] CHECKOUT COMPLETE for {userEmail}: Order {order.Id}");
-
-            return true;
         }
 
         private void SendEmail(string subject, string body)
