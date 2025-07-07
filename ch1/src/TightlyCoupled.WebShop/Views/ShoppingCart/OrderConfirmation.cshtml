@@ -1,0 +1,83 @@
+﻿@model TightlyCoupled.WebShop.ViewModels.OrderConfirmationViewModel
+@{
+    ViewData["Title"] = "Order Confirmation";
+    var total = Model.Items.Sum(i => i.Price * i.Quantity);
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">@ViewData["Title"]</h2>
+
+    <div class="alert alert-success" role="alert">
+        <i class="fas fa-check-circle"></i>
+        Thank you for your order, <strong>@Model.CustomerEmail</strong>!<br />
+        Your order number is <strong>#@Model.OrderId</strong>.
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Order Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            var subtotal = item.Price * item.Quantity;
+                            <tr>
+                                <td>@item.ItemName</td>
+                                <td>@item.Price.ToString("C")</td>
+                                <td>@item.Quantity</td>
+                                <td>@subtotal.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="3" class="text-end">Subtotal:</th>
+                            <th>@Model.Subtotal.ToString("C")</th>
+                        </tr>
+                        <tr>
+                            <th colspan="3" class="text-end">Tax (@Model.TaxRate.ToString("P2")):</th>
+                            <th>@Model.TaxAmount.ToString("C")</th>
+                        </tr>
+                        <tr>
+                            <th colspan="3" class="text-end">Shipping (@Model.ShippingOption via @Model.Courier):</th>
+                            <th>@Model.ShippingCost.ToString("C")</th>
+                        </tr>
+                        <tr class="table-primary">
+                            <th colspan="3" class="text-end">Total:</th>
+                            <th>@Model.TotalPrice.ToString("C")</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <p class="mt-3">
+                Estimated delivery date:
+                <strong>
+                    @Model.EstimatedDeliveryDate.ToString("D")
+                </strong>
+            </p>
+
+            <p>
+                Shipping to: <br />
+                <strong>@Model.CustomerAddress</strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="text-end">
+        <a href="/" class="btn btn-primary">
+            <i class="fas fa-home"></i> Return to Home
+        </a>
+    </div>
+</div>

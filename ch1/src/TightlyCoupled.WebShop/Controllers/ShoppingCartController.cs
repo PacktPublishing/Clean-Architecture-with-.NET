@@ -1,22 +1,17 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Security.Claims;
 using MailKit.Net.Smtp;
-using MimeKit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+using MimeKit;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
+using System.Xml;
 using TightlyCoupled.WebShop.Data;
 using TightlyCoupled.WebShop.Models;
 using TightlyCoupled.WebShop.Services;
-using System.IO;
-using System.Text;
-using System.Xml;
-using System.Text.Json;
-using Microsoft.Data.SqlClient;
+using TightlyCoupled.WebShop.ViewModels;
 
 namespace TightlyCoupled.WebShop.Controllers
 {
@@ -452,7 +447,7 @@ WebShop System"
             return RedirectToAction("Index");
         }
 
-        public bool Checkout(string shippingOption, string customerAddress)
+        public IActionResult Checkout(string shippingOption, string customerAddress)
         {
             try
             {
@@ -468,7 +463,7 @@ WebShop System"
                 if (string.IsNullOrEmpty(userId))
                 {
                     WriteToLogFile($"[{DateTime.Now}] SECURITY: Anonymous checkout attempt");
-                    return false;
+                    return Unauthorized();
                 }
 
                 // Business rule validation using file-based config - tight coupling
@@ -515,7 +510,7 @@ WebShop System"
                 if (!cartItems.Any())
                 {
                     WriteToLogFile($"[{DateTime.Now}] CHECKOUT FAILED: Empty cart for {userEmail}");
-                    return false;
+                    return RedirectToAction("Index");
                 }
 
                 WriteToLogFile($"[{DateTime.Now}] Cart loaded: {cartItems.Count} items, subtotal: {subtotal:C}");
@@ -545,7 +540,7 @@ WebShop System"
                 {
                     WriteToLogFile($"[{DateTime.Now}] ORDER LIMIT EXCEEDED: {userEmail} attempted {subtotal:C} > {maxOrderValue:C}");
                     SendEmail("Order Rejected", $"Your order of {subtotal:C} exceeds our limit of {maxOrderValue:C}");
-                    return false;
+                    return RedirectToAction("CartError");
                 }
 
                 // Manager approval for large orders - workflow logic in controller
@@ -569,7 +564,7 @@ WebShop System"
                     
                     // Send approval email to manager - hard-coded recipient
                     SendManagerApprovalEmail(userEmail, subtotal, approvalFile);
-                    return false; // Order pending approval
+                    return RedirectToAction("PendingApproval"); // Order pending approval
                 }
 
                 // Multiple external service calls - all blocking and synchronous
@@ -785,7 +780,7 @@ WebShop Team";
                     
                     System.IO.File.WriteAllText(failureFile, JsonSerializer.Serialize(failureData, new JsonSerializerOptions { WriteIndented = true }));
                     
-                    return false;
+                    return RedirectToAction("PaymentFailed");
                 }
 
                 // Create order using direct SQL instead of EF for "performance" - more tight coupling
@@ -953,8 +948,36 @@ Order processed on {Environment.MachineName} at {DateTime.Now}
                 
                 // Update global statistics
                 GlobalUtilities.ErrorCount = 0; // Reset error count on successful order
-                
-                return true;
+
+                // Create and store confirmation view model
+                var confirmationViewModel = new OrderConfirmationViewModel
+                {
+                    OrderId = orderId,
+                    CustomerEmail = userEmail,
+                    CustomerAddress = customerAddress,
+                    ShippingOption = shippingOption,
+                    Courier = courierService,
+                    EstimatedDeliveryDate = shippingOption == "Express"
+                        ? DateTime.Now.AddDays(1)
+                        : DateTime.Now.AddDays(3),
+                    Subtotal = subtotal,
+                    TaxRate = taxRate,
+                    TaxAmount = taxAmount,
+                    ShippingCost = shippingCost,
+                    TotalPrice = totalPrice,
+                    Items = cartItems.Select(i => new CartItemViewModel
+                    {
+                        ItemName = i.ItemName,
+                        Price = i.Price,
+                        Quantity = i.Quantity
+                    }).ToList()
+                };
+
+                TempData["OrderConfirmation"] = JsonSerializer.Serialize(
+                    confirmationViewModel,
+                    new JsonSerializerOptions { WriteIndented = false });
+
+                return RedirectToAction("OrderConfirmation");
             }
             catch (Exception ex)
             {
@@ -971,6 +994,18 @@ Order processed on {Environment.MachineName} at {DateTime.Now}
                 
                 throw; // Re-throw for controller error handling
             }
+        }
+
+        public IActionResult OrderConfirmation()
+        {
+            if (TempData["OrderConfirmation"] is string json)
+            {
+                var model = JsonSerializer.Deserialize<OrderConfirmationViewModel>(json);
+                return View(model);
+            }
+
+            TempData["ErrorMessage"] = "Order confirmation details not found.";
+            return RedirectToAction("Index");
         }
 
         private void SendEmail(string subject, string body)
