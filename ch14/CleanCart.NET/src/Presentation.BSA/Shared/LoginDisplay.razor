@@ -1,0 +1,11 @@
+﻿@if (_user?.Identity?.IsAuthenticated == true)
+{
+    <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+        <MudText> Hello, <strong>@DisplayName</strong>! </MudText>
+        <MudButton Href="MicrosoftIdentity/Account/SignOut" Variant="Variant.Text" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Logout">Sign Out</MudButton>
+    </MudStack>
+}
+else
+{
+    <MudButton Href="MicrosoftIdentity/Account/SignIn" Variant="Variant.Text" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Login">Sign in</MudButton>
+}
