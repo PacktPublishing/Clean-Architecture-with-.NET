@@ -33,7 +33,8 @@ namespace TightlyCoupled.WebShop.Controllers
         private const string EMAIL_PASSWORD = "hardcoded_password_123";
         private const string DB_CONNECTION = "Server=(localdb)\\mssqllocaldb;Database=TightlyCoupledWebShop;Trusted_Connection=true;MultipleActiveResultSets=true";
 
-        public ShoppingCartController(ApplicationDbContext context, ILogger<ShoppingCartController> logger)
+        public ShoppingCartController(ApplicationDbContext context,
+                                        ILogger<ShoppingCartController> logger)
         {
             _context = context;
             _logger = logger;
@@ -447,7 +448,10 @@ WebShop System"
             return RedirectToAction("Index");
         }
 
-        public IActionResult Checkout(string shippingOption, string customerAddress)
+        public record CartDetails(string shippingOption, string customerAddress);
+
+        [HttpPost]
+        public IActionResult Checkout([FromBody]CartDetails details)
         {
             try
             {
@@ -458,7 +462,7 @@ WebShop System"
                 GlobalUtilities.CurrentUser = userEmail;
                 GlobalUtilities.LastActivity = DateTime.Now;
                 
-                WriteToLogFile($"[{DateTime.Now}] CHECKOUT STARTED: User {userEmail} with shipping {shippingOption} to {customerAddress}");
+                WriteToLogFile($"[{DateTime.Now}] CHECKOUT STARTED: User {userEmail} with shipping {details.shippingOption} to {details.customerAddress}");
                 
                 if (string.IsNullOrEmpty(userId))
                 {
@@ -520,7 +524,7 @@ WebShop System"
                 var isWeekend = DateTime.Now.DayOfWeek == DayOfWeek.Saturday || DateTime.Now.DayOfWeek == DayOfWeek.Sunday;
                 var isBusinessHours = GlobalUtilities.IsBusinessHours();
                 var isHolidaySeason = DateTime.Now.Month == 12;
-                
+
                 // Weekend surcharge - business logic mixed with infrastructure
                 if (isWeekend && !isVipCustomer)
                 {
@@ -583,7 +587,7 @@ WebShop System"
                         
                         var taxRequest = new
                         {
-                            address = customerAddress,
+                            address = details.customerAddress,
                             amount = subtotal,
                             customerType = isVipCustomer ? "VIP" : "Standard",
                             items = cartItems.Select(i => new { name = i.ItemName, category = "General" }).ToArray()
@@ -622,9 +626,9 @@ WebShop System"
                     
                     var shippingRequest = new
                     {
-                        destination = customerAddress,
+                        destination = details.customerAddress,
                         weight = cartItems.Sum(i => i.Quantity) * 0.5, // Assume 0.5 lbs per item
-                        priority = shippingOption,
+                        priority = details.shippingOption,
                         isVip = isVipCustomer
                     };
                     
@@ -640,8 +644,8 @@ WebShop System"
                     else
                     {
                         // Hard-coded fallback shipping costs
-                        shippingCost = shippingOption == "Express" ? (isVipCustomer ? 20 : 25) : (isVipCustomer ? 5 : 10);
-                        courierService = shippingOption == "Express" ? "FedEx" : "USPS";
+                        shippingCost = details.shippingOption == "Express" ? (isVipCustomer ? 20 : 25) : (isVipCustomer ? 5 : 10);
+                        courierService = details.shippingOption == "Express" ? "FedEx" : "USPS";
                     }
                     
                     WriteToLogFile($"[{DateTime.Now}] SHIPPING: {shippingCost:C} via {courierService} for {userEmail}");
@@ -649,7 +653,7 @@ WebShop System"
                 catch (Exception ex)
                 {
                     WriteToLogFile($"[{DateTime.Now}] SHIPPING ERROR: {ex.Message}");
-                    shippingCost = shippingOption == "Express" ? 25 : 10; // Hard-coded fallback
+                    shippingCost = details.shippingOption == "Express" ? 25 : 10; // Hard-coded fallback
                     courierService = "Standard";
                 }
 
@@ -795,7 +799,7 @@ WebShop Team";
                             // Insert order with SQL injection vulnerability
                             var orderSql = $@"
                                 INSERT INTO Orders (UserId, CustomerAddress, ShippingOption, TotalAmount, CreatedDate, CourierService, PaymentMethod, IsVipOrder)
-                                VALUES ('{userId}', '{customerAddress}', '{shippingOption}', {totalPrice}, '{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}', '{courierService}', '{paymentMethod}', {(isVipCustomer ? 1 : 0)});
+                                VALUES ('{userId}', '{details.customerAddress}', '{details.shippingOption}', {totalPrice}, '{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}', '{courierService}', '{paymentMethod}', {(isVipCustomer ? 1 : 0)});
                                 SELECT SCOPE_IDENTITY();";
                             
                             var orderCommand = new SqlCommand(orderSql, connection, transaction);
@@ -845,7 +849,7 @@ WebShop Team";
                         orderId = orderId,
                         customerEmail = userEmail,
                         items = cartItems.Select(i => new { name = i.ItemName, quantity = i.Quantity }).ToArray(),
-                        shippingAddress = customerAddress,
+                        shippingAddress = details.customerAddress,
                         courierService = courierService,
                         priority = isVipCustomer ? "High" : "Normal"
                     };
@@ -925,10 +929,10 @@ Pricing Breakdown:
 - TOTAL: {totalPrice:C}
 
 Shipping Information:
-- Method: {shippingOption}
+- Method: {details.shippingOption}
 - Courier: {courierService}
-- Address: {customerAddress}
-- Estimated Delivery: {(shippingOption == "Express" ? DateTime.Now.AddDays(1).ToString("yyyy-MM-dd") : DateTime.Now.AddDays(3).ToString("yyyy-MM-dd"))}
+- Address: {details.customerAddress}
+- Estimated Delivery: {(details.shippingOption == "Express" ? DateTime.Now.AddDays(1).ToString("yyyy-MM-dd") : DateTime.Now.AddDays(3).ToString("yyyy-MM-dd"))}
 
 Payment Method: {paymentMethod}
 
@@ -954,10 +958,10 @@ Order processed on {Environment.MachineName} at {DateTime.Now}
                 {
                     OrderId = orderId,
                     CustomerEmail = userEmail,
-                    CustomerAddress = customerAddress,
-                    ShippingOption = shippingOption,
+                    CustomerAddress = details.customerAddress,
+                    ShippingOption = details.shippingOption,
                     Courier = courierService,
-                    EstimatedDeliveryDate = shippingOption == "Express"
+                    EstimatedDeliveryDate = details.shippingOption == "Express"
                         ? DateTime.Now.AddDays(1)
                         : DateTime.Now.AddDays(3),
                     Subtotal = subtotal,
