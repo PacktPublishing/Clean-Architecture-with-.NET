@@ -1,0 +1,78 @@
+@using Application.Operations.UseCases.CalculateCartTotal
+@namespace Presentation.BSA.Components
+
+@if (ShoppingCart == null)
+{
+    <MudAlert Severity="Severity.Error">Cart not found.</MudAlert>
+}
+else
+{
+    <MudTable Items="@ShoppingCart.Items" Striped Bordered Hover>
+        <HeaderContent>
+            <MudTh>Product</MudTh>
+            <MudTh>Price</MudTh>
+            <MudTh>Quantity</MudTh>
+            <MudTh>Total</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.ProductName</MudTd>
+            <MudTd>@context.ProductPrice.ToString("C")</MudTd>
+            <MudTd>@context.Quantity</MudTd>
+            <MudTd>@((context.ProductPrice * context.Quantity).ToString("C"))</MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.RemoveShoppingCart"
+                               Color="Color.Error"
+                               OnClick="() => InvokeRemoveItemClicked(context.ProductId)" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+    <MudText Typo="Typo.h6">Total: @(_cartTotal.ToString("C"))</MudText>
+}
+
+@code {
+    [Parameter]
+    public ShoppingCart? ShoppingCart { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnRemoveItemClicked { get; set; }
+
+    [Inject]
+    private IAuthenticationService AuthenticationService { get; set; } = null!;
+
+    [Inject]
+    private IMediator Mediator { get; set; } = null!;
+
+    [Inject]
+    private ShoppingCartState ShoppingCartState { get; set; } = null!;
+
+    private User? _user;
+    private decimal _cartTotal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _user = await AuthenticationService.GetCurrentUserAsync() ?? throw new UnauthorizedAccessException("User not found.");
+
+        if (ShoppingCart != null)
+        {
+            await CalculateCartTotal();
+        }
+    }
+
+    private async Task CalculateCartTotal()
+    {
+        var query = new CalculateCartTotalQuery(_user!.Id);
+        _cartTotal = await Mediator.Send(query);
+    }
+
+    private async void InvokeRemoveItemClicked(Guid productId)
+    {
+        if (!OnRemoveItemClicked.HasDelegate)
+            return;
+
+        await OnRemoveItemClicked.InvokeAsync(productId);
+        await CalculateCartTotal();
+        ShoppingCartState.NotifyCartChanged();
+        StateHasChanged();
+    }
+}
