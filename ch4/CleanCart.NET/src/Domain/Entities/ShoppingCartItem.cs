@@ -1,20 +1,11 @@
 ﻿using System;
 
-namespace Domain.Entities
-{
-    public class ShoppingCartItem
-    {
-        public Guid ProductId { get; }
-        public string ProductName { get; }
-        public decimal ProductPrice { get; }
-        public int Quantity { get; set; }
+namespace Domain.Entities;
 
-        public ShoppingCartItem(Guid productId, string productName, decimal productPrice, int quantity)
-        {
-            ProductId = productId;
-            ProductName = productName;
-            ProductPrice = productPrice;
-            Quantity = quantity;
-        }
-    }
+public class ShoppingCartItem(Guid productId, string productName, decimal productPrice, int quantity)
+{
+    public Guid ProductId { get; } = productId;
+    public string ProductName { get; } = productName;
+    public decimal ProductPrice { get; } = productPrice;
+    public int Quantity { get; set; } = quantity;
 }

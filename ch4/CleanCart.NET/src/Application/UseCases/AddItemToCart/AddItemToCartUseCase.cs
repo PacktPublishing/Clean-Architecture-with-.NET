@@ -1,30 +1,26 @@
 ﻿using Application.Interfaces.Data;
 using Application.Interfaces.UseCases;
+using Domain.Entities;
 using System.Threading.Tasks;
 
-namespace Application.UseCases.AddItemToCart
+namespace Application.UseCases.AddItemToCart;
+
+public class AddItemToCartUseCase(
+    IShoppingCartRepository shoppingCartRepository,
+    IProductRepository productRepository)
+    : IAddItemToCartUseCase
 {
-    public class AddItemToCartUseCase : IAddItemToCartUseCase
+    public async Task AddItemToCartAsync(AddItemToCartInput input)
     {
-        private readonly IShoppingCartRepository _shoppingCartRepository;
-        private readonly IProductRepository _productRepository;
+        var product = await productRepository.GetByIdAsync(input.ProductId);
+        if (product is null)
+            return; // Alternatively, throw an exception or handle the error as needed
 
-        public AddItemToCartUseCase(
-            IShoppingCartRepository shoppingCartRepository,
-            IProductRepository productRepository)
-        {
-            _shoppingCartRepository = shoppingCartRepository;
-            _productRepository = productRepository;
-        }
+        var shoppingCart = await shoppingCartRepository.GetByUserIdAsync(input.UserId)
+                           ?? new ShoppingCart(input.UserId);
 
-        public async Task AddItemToCartAsync(AddItemToCartInput input)
-        {
-            var shoppingCart = await _shoppingCartRepository.GetByCustomerIdAsync(input.CustomerId);
-            var product = await _productRepository.GetByIdAsync(input.ProductId);
+        shoppingCart.AddItem(product.Id, product.Name, product.Price, input.Quantity);
 
-            shoppingCart.AddItem(product, input.Quantity);
-
-            await _shoppingCartRepository.SaveAsync(shoppingCart);
-        }
+        await shoppingCartRepository.SaveAsync(shoppingCart);
     }
 }

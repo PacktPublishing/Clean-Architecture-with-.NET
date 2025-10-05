@@ -1,18 +1,10 @@
 ﻿using System;
 
-namespace Domain.Entities
-{
-    public class Product
-    {
-        public Guid Id { get; }
-        public string Name { get; }
-        public decimal Price { get; }
+namespace Domain.Entities;
 
-        public Product(Guid id, string name, decimal price)
-        {
-            Id = id;
-            Name = name;
-            Price = price;
-        }
-    }
+public class Product(string name, decimal price)
+{
+    public Guid Id { get; private set; } = Guid.NewGuid();
+    public string Name { get; private set; } = name;
+    public decimal Price { get; private set; } = price;
 }

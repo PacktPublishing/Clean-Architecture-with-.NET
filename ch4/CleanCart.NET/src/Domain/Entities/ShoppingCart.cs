@@ -2,33 +2,30 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Domain.Entities
+namespace Domain.Entities;
+
+public class ShoppingCart(Guid userId)
 {
-    public class ShoppingCart
+    public Guid Id { get; private set; } = Guid.NewGuid();
+    public Guid UserId { get; } = userId;
+
+    // Preserve encapsulation via a read-only view
+    public IReadOnlyCollection<ShoppingCartItem> Items => _items.AsReadOnly();
+
+    // Keep the mutable list private
+    private readonly List<ShoppingCartItem> _items = new();
+
+    public void AddItem(Guid productId, string productName, decimal productPrice, int quantity)
     {
-        public Guid Id { get; private set; }
-        public Guid CustomerId { get; private set; }
-        public List<ShoppingCartItem> Items { get; }
+        var existingItem = _items.SingleOrDefault(i => i.ProductId == productId);
 
-        public ShoppingCart(Guid customerId)
+        if (existingItem != null)
         {
-            Id = Guid.NewGuid();
-            CustomerId = customerId;
-            Items = new List<ShoppingCartItem>();
+            existingItem.Quantity += quantity;
         }
-
-        public void AddItem(Product product, int quantity)
+        else
         {
-            var existingItem = Items.SingleOrDefault(i => i.ProductId == product.Id);
-
-            if (existingItem != null)
-            {
-                existingItem.Quantity += quantity;
-            }
-            else
-            {
-                Items.Add(new ShoppingCartItem(product.Id, product.Name, product.Price, quantity));
-            }
+            _items.Add(new ShoppingCartItem(productId, productName, productPrice, quantity));
         }
     }
 }

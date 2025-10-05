@@ -2,12 +2,11 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Application.Interfaces.Data
-{
-    public interface IShoppingCartRepository
-    {
-        Task<ShoppingCart> GetByCustomerIdAsync(Guid customerId);
+namespace Application.Interfaces.Data;
 
-        Task SaveAsync(ShoppingCart shoppingCart);
-    }
+public interface IShoppingCartRepository
+{
+    Task<ShoppingCart?> GetByUserIdAsync(Guid userId);
+
+    Task SaveAsync(ShoppingCart shoppingCart);
 }
