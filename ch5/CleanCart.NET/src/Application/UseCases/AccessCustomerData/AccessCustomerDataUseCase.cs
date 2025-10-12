@@ -4,48 +4,45 @@ using Domain.Entities;
 using Domain.Enums;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
-namespace Application.UseCases.AccessCustomerData
+namespace Application.UseCases.AccessCustomerData;
+
+public class AccessCustomerDataUseCase(
+    IOrderRepository orderRepository,
+    IShoppingCartRepository shoppingCartRepository,
+    IUserRepository userRepository)
+    : IAccessCustomerDataUseCase
 {
-    public class AccessCustomerDataUseCase : IAccessCustomerDataUseCase
+    public async Task<ShoppingCart?> GetCustomerCartAsync(Guid requestingUserId, Guid targetUserId)
     {
-        private readonly IOrderRepository _orderRepository;
-        private readonly IShoppingCartRepository _shoppingCartRepository;
-        private readonly IUserRepository _userRepository;
+        await AuthorizeUserAsync(requestingUserId);
 
-        public AccessCustomerDataUseCase(
-            IOrderRepository orderRepository,
-            IShoppingCartRepository shoppingCartRepository,
-            IUserRepository userRepository)
+        // Retrieve the customer's shopping cart by customer ID
+        return await shoppingCartRepository.GetByUserIdAsync(targetUserId);
+    }
+
+    public async Task<IEnumerable<Order>> GetOrderHistoryAsync(Guid requestingUserId, Guid targetUserId)
+    {
+        await AuthorizeUserAsync(requestingUserId);
+
+        // Retrieve the order history for the customer by user ID
+        return await orderRepository.GetOrdersByUserIdAsync(targetUserId);
+    }
+
+    private async Task AuthorizeUserAsync(Guid userId)
+    {
+        var user = await userRepository.GetByIdAsync(userId);
+
+        if (user == null)
         {
-            _orderRepository = orderRepository;
-            _shoppingCartRepository = shoppingCartRepository;
-            _userRepository = userRepository;
+            throw new UnauthorizedAccessException("User not found.");
         }
 
-        public async Task<ShoppingCart> GetCustomerCartAsync(Guid userId, Guid customerId)
+        if (!(user.Roles.Contains(UserRole.Administrator) || user.Roles.Contains(UserRole.CustomerService)))
         {
-            var user = await _userRepository.GetByIdAsync(userId);
-            if (!(user.Roles.Contains(UserRole.Administrator) || user.Roles.Contains(UserRole.CustomerService)))
-            {
-                throw new UnauthorizedAccessException("User is not authorized to access customer data.");
-            }
-
-            // Retrieve the customer's shopping cart by customer ID
-            return await _shoppingCartRepository.GetByCustomerIdAsync(customerId);
-        }
-
-        public async Task<IEnumerable<Order>> GetOrderHistoryAsync(Guid userId, Guid customerId)
-        {
-            var user = await _userRepository.GetByIdAsync(userId);
-            if (!(user.Roles.Contains(UserRole.Administrator) || user.Roles.Contains(UserRole.CustomerService)))
-            {
-                throw new UnauthorizedAccessException("User is not authorized to access customer data.");
-            }
-
-            // Retrieve the order history for the customer by user ID
-            return await _orderRepository.GetOrdersByUserIdAsync(customerId);
+            throw new UnauthorizedAccessException("User is not authorized to access customer data.");
         }
     }
 }

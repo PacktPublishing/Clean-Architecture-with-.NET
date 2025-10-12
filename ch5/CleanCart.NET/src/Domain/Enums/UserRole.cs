@@ -1,9 +1,8 @@
-﻿namespace Domain.Enums
+﻿namespace Domain.Enums;
+
+public enum UserRole
 {
-    public enum UserRole
-    {
-        CustomerService,
-        Administrator
-        // Add other roles as needed
-    }
+    CustomerService,
+    Administrator
+    // Add other roles as needed
 }

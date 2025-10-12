@@ -1,10 +1,9 @@
 ﻿using Application.UseCases.AddItemToCart;
 using System.Threading.Tasks;
 
-namespace Application.Interfaces.UseCases
+namespace Application.Interfaces.UseCases;
+
+public interface IAddItemToCartUseCase
 {
-    public interface IAddItemToCartUseCase
-    {
-        Task AddItemToCartAsync(AddItemToCartInput input);
-    }
+    Task AddItemToCartAsync(AddItemToCartInput input);
 }

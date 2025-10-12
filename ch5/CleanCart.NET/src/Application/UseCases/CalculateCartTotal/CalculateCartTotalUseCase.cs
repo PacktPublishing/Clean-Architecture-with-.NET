@@ -4,39 +4,31 @@ using Domain.Entities;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Application.UseCases.CalculateCartTotal
+namespace Application.UseCases.CalculateCartTotal;
+
+public class CalculateCartTotalUseCase(IShoppingCartRepository shoppingCartRepository) : ICalculateCartTotalUseCase
 {
-    public class CalculateCartTotalUseCase : ICalculateCartTotalUseCase
+    public async Task<decimal> CalculateTotalAsync(CalculateCartTotalInput input)
     {
-        private readonly IShoppingCartRepository _shoppingCartRepository;
+        var shoppingCart = await shoppingCartRepository.GetByUserIdAsync(input.UserId);
 
-        public CalculateCartTotalUseCase(IShoppingCartRepository shoppingCartRepository)
-        {
-            _shoppingCartRepository = shoppingCartRepository;
-        }
+        decimal subtotal = CalculateSubtotal(shoppingCart);
+        decimal taxes = CalculateTaxes(subtotal);
+        decimal total = subtotal + taxes;
 
-        public async Task<decimal> CalculateTotalAsync(CalculateCartTotalInput input)
-        {
-            var shoppingCart = await _shoppingCartRepository.GetByCustomerIdAsync(input.CustomerId);
+        return total;
+    }
 
-            decimal subtotal = CalculateSubtotal(shoppingCart);
-            decimal taxes = CalculateTaxes(subtotal);
-            decimal total = subtotal + taxes;
+    private decimal CalculateSubtotal(ShoppingCart? shoppingCart)
+    {
+        return shoppingCart?.Items.Sum(item => item.ProductPrice * item.Quantity) ?? 0;
+    }
 
-            return total;
-        }
-
-        private decimal CalculateSubtotal(ShoppingCart shoppingCart)
-        {
-            return shoppingCart.Items.Sum(item => item.ProductPrice * item.Quantity);
-        }
-
-        private decimal CalculateTaxes(decimal subtotal)
-        {
-            // Implement tax calculation logic here based on business rules.
-            // For simplicity, we assume a flat tax rate in this example.
-            const decimal taxRate = 0.08M;
-            return subtotal * taxRate;
-        }
+    private decimal CalculateTaxes(decimal subtotal)
+    {
+        // Implement tax calculation logic here based on business rules.
+        // For simplicity, we assume a flat tax rate in this example.
+        const decimal taxRate = 0.08M;
+        return subtotal * taxRate;
     }
 }

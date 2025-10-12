@@ -1,18 +1,10 @@
 ﻿using System;
 
-namespace Application.UseCases.RemoveItemFromCart
-{
-    public class RemoveItemFromCartInput
-    {
-        public Guid CustomerId { get; set; }
-        public Guid ProductId { get; set; }
-        public int Quantity { get; }
+namespace Application.UseCases.RemoveItemFromCart;
 
-        public RemoveItemFromCartInput(Guid customerId, Guid productId, int quantity)
-        {
-            CustomerId = customerId;
-            ProductId = productId;
-            Quantity = quantity;
-        }
-    }
+public class RemoveItemFromCartInput(Guid userId, Guid productId, int quantity)
+{
+    public Guid UserId { get; set; } = userId;
+    public Guid ProductId { get; set; } = productId;
+    public int Quantity { get; } = quantity;
 }

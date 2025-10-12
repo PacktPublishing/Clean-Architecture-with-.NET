@@ -1,31 +1,34 @@
 ﻿using Application.Interfaces.Data;
 using Application.Interfaces.UseCases;
-using System.Threading.Tasks;
 using Domain.Entities;
+using System;
+using System.Threading.Tasks;
 
-namespace Application.UseCases.AddItemToCart
+namespace Application.UseCases.AddItemToCart;
+
+public class AddItemToCartUseCase(
+    IShoppingCartRepository shoppingCartRepository,
+    IProductRepository productRepository)
+    : IAddItemToCartUseCase
 {
-    public class AddItemToCartUseCase : IAddItemToCartUseCase
+    public async Task AddItemToCartAsync(AddItemToCartInput input)
     {
-        private readonly IShoppingCartRepository _shoppingCartRepository;
-        private readonly IProductRepository _productRepository;
+        var product = await productRepository.GetByIdAsync(input.ProductId);
 
-        public AddItemToCartUseCase(
-            IShoppingCartRepository shoppingCartRepository,
-            IProductRepository productRepository)
+        if (product is null)
+            return; // Alternatively, throw an exception or handle the error as needed
+
+        if (product.StockLevel < input.Quantity)
         {
-            _shoppingCartRepository = shoppingCartRepository;
-            _productRepository = productRepository;
+            throw new InvalidOperationException(
+                $"Not enough stock for '{product.Name}'. Requested: {input.Quantity}, Available: {product.StockLevel}");
         }
 
-        public async Task AddItemToCartAsync(AddItemToCartInput input)
-        {
-            ShoppingCart cart = await _shoppingCartRepository.GetByCustomerIdAsync(input.CustomerId);
-            Product product = await _productRepository.GetByIdAsync(input.ProductId);
+        var shoppingCart = await shoppingCartRepository.GetByUserIdAsync(input.UserId)
+                           ?? new ShoppingCart(input.UserId);
 
-            cart.AddItem(product, input.Quantity);
+        shoppingCart.AddItem(product.Id, product.Name, product.Price, input.Quantity);
 
-            await _shoppingCartRepository.SaveAsync(cart);
-        }
+        await shoppingCartRepository.SaveAsync(shoppingCart);
     }
 }

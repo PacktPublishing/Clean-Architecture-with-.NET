@@ -3,32 +3,36 @@ using Application.Interfaces.UseCases;
 using Domain.Entities;
 using Domain.Enums;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
-namespace Application.UseCases.ManageProductInventory
+namespace Application.UseCases.ManageProductInventory;
+
+public class ManageProductInventoryUseCase(
+    IUserRepository userRepository,
+    IProductRepository productRepository)
+    : IManageProductInventoryUseCase
 {
-    public class ManageProductInventoryUseCase : IManageProductInventoryUseCase
+    public async Task UpdateProductInventoryAsync(Guid userId, Guid productId, int stockLevel)
     {
-        private readonly IUserRepository _userRepository;
-        private readonly IProductRepository _productRepository;
+        User? user = await userRepository.GetByIdAsync(userId);
 
-        public ManageProductInventoryUseCase(IUserRepository userRepository, IProductRepository productRepository)
+        if (user == null)
         {
-            _userRepository = userRepository;
-            _productRepository = productRepository;
+            throw new UnauthorizedAccessException("User not found.");
         }
 
-        public async Task UpdateProductInventoryAsync(Guid userId, Guid productId, int stockLevel)
+        if (!user.Roles.Contains(UserRole.Administrator))
         {
-            User user = await _userRepository.GetByIdAsync(userId);
-            if (!user.Roles.Contains(UserRole.Administrator))
-            {
-                throw new UnauthorizedAccessException("User is not authorized to manage product inventory.");
-            }
-
-            Product product = await _productRepository.GetByIdAsync(productId);
-            product.UpdateStockLevel(stockLevel);
-            await _productRepository.UpdateAsync(product);
+            throw new UnauthorizedAccessException("User is not authorized to manage product inventory.");
         }
+
+        Product? product = await productRepository.GetByIdAsync(productId);
+
+        if (product is null)
+            return; // Log or handle as needed
+
+        product.UpdateStockLevel(stockLevel);
+        await productRepository.UpdateAsync(product);
     }
 }

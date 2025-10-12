@@ -2,33 +2,36 @@
 using System;
 using System.Collections.Generic;
 
-namespace Domain.Entities
+namespace Domain.Entities;
+
+public class User
 {
-    public class User
+    private readonly List<UserRole> _roles = new();
+
+    public Guid Id { get; private set; } = Guid.NewGuid();
+    public string Username { get; }
+    public string Email { get; }
+    public string FullName { get; }
+    public IReadOnlyCollection<UserRole> Roles => _roles.AsReadOnly();
+
+    public User(string username, string email, string fullName, IEnumerable<UserRole> roles)
     {
-        public Guid Id { get; private set; }
-        public string Username { get; private set; }
-        public string Email { get; private set; }
-        public string FullName { get; private set; }
-        public List<UserRole> Roles { get; }
+        Username = username;
+        Email = email;
+        FullName = fullName;
+        _roles.AddRange(roles);
+    }
 
-        public User(string username, string email, string fullName, List<UserRole> roles)
+    public void AddRole(UserRole role)
+    {
+        if (!_roles.Contains(role))
         {
-            Id = Guid.NewGuid();
-            Username = username;
-            Email = email;
-            FullName = fullName;
-            Roles = roles;
+            _roles.Add(role);
         }
+    }
 
-        public void AddRole(UserRole role)
-        {
-            Roles.Add(role);
-        }
-
-        public void RemoveRole(UserRole role)
-        {
-            Roles.Remove(role);
-        }
+    public void RemoveRole(UserRole role)
+    {
+        _roles.Remove(role);
     }
 }

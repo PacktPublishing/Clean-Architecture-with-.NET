@@ -1,9 +1,8 @@
-﻿namespace Application.Interfaces.Services.Payment
+﻿namespace Application.Interfaces.Services.Payment;
+
+public enum PaymentStatus
 {
-    public enum PaymentStatus
-    {
-        Pending,
-        Success,
-        Failed
-    }
+    Pending,
+    Success,
+    Failed
 }

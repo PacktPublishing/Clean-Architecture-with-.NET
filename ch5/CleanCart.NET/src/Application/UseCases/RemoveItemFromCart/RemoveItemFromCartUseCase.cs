@@ -1,26 +1,20 @@
 ﻿using Application.Interfaces.Data;
 using Application.Interfaces.UseCases;
-using System.Threading.Tasks;
 using Domain.Entities;
+using System.Threading.Tasks;
 
-namespace Application.UseCases.RemoveItemFromCart
+namespace Application.UseCases.RemoveItemFromCart;
+
+public class RemoveItemFromCartUseCase(IShoppingCartRepository shoppingCartRepository) : IRemoveItemFromCartUseCase
 {
-    public class RemoveItemFromCartUseCase : IRemoveItemFromCartUseCase
+    public async Task RemoveItemFromCartAsync(RemoveItemFromCartInput input)
     {
-        private readonly IShoppingCartRepository _shoppingCartRepository;
+        ShoppingCart? cart = await shoppingCartRepository.GetByUserIdAsync(input.UserId);
 
-        public RemoveItemFromCartUseCase(IShoppingCartRepository shoppingCartRepository)
+        if (cart != null)
         {
-            _shoppingCartRepository = shoppingCartRepository;
-        }
-
-        public async Task RemoveItemFromCartAsync(RemoveItemFromCartInput input)
-        {
-            ShoppingCart cart = await _shoppingCartRepository.GetByCustomerIdAsync(input.CustomerId);
-
             cart.RemoveItem(input.ProductId, input.Quantity);
-
-            await _shoppingCartRepository.SaveAsync(cart);
+            await shoppingCartRepository.SaveAsync(cart);
         }
     }
 }
