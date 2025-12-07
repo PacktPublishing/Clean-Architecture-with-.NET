@@ -2,51 +2,37 @@
 using Domain.Entities;
 using Domain.Enums;
 using MediatR;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Application.Operations.UseCases.ManageProductInventory
+namespace Application.Operations.UseCases.ManageProductInventory;
+
+public class UpdateProductInventoryCommandHandler(
+    IUserQueryRepository userQueryRepository,
+    IProductQueryRepository productQueryRepository,
+    IProductCommandRepository productCommandRepository)
+    : IRequestHandler<UpdateProductInventoryCommand>
 {
-    public class UpdateProductInventoryCommandHandler : IRequestHandler<UpdateProductInventoryCommand>
+    public async Task Handle(UpdateProductInventoryCommand command, CancellationToken cancellationToken)
     {
-        private readonly IUserQueryRepository _userQueryRepository;
-        private readonly IProductQueryRepository _productQueryRepository;
-        private readonly IProductCommandRepository _productCommandRepository;
+        User? user = await userQueryRepository.GetByIdAsync(command.UserId, cancellationToken);
 
-        public UpdateProductInventoryCommandHandler(
-            IUserQueryRepository userQueryRepository,
-            IProductQueryRepository productQueryRepository,
-            IProductCommandRepository productCommandRepository)
+        if (user == null)
         {
-            _userQueryRepository = userQueryRepository;
-            _productQueryRepository = productQueryRepository;
-            _productCommandRepository = productCommandRepository;
+            throw new ArgumentException($"User '{command.UserId}' does not exist.");
         }
 
-        public async Task Handle(UpdateProductInventoryCommand command, CancellationToken cancellationToken)
+        if (!user.Roles.Contains(UserRole.Administrator))
         {
-            User? user = await _userQueryRepository.GetByIdAsync(command.UserId, cancellationToken);
-
-            if (user == null)
-            {
-                throw new ArgumentException($"User '{command.UserId}' does not exist.");
-            }
-
-            if (!user.Roles.Contains(UserRole.Administrator))
-            {
-                throw new UnauthorizedAccessException("User is not authorized to manage product inventory.");
-            }
-
-            Product? product = await _productQueryRepository.GetByIdAsync(command.ProductId, cancellationToken);
-
-            if (product == null)
-            {
-                throw new ArgumentException($"Product '{command.ProductId}' does not exist.");
-            }
-
-            product.UpdateStockLevel(command.StockLevel);
-            await _productCommandRepository.UpdateAsync(product, cancellationToken);
+            throw new UnauthorizedAccessException("User is not authorized to manage product inventory.");
         }
+
+        Product? product = await productQueryRepository.GetByIdAsync(command.ProductId, cancellationToken);
+        
+        if  (product == null)
+        {
+            throw new ArgumentException($"Product '{command.ProductId}' does not exist.");
+        }
+        
+        product.UpdateStockLevel(command.StockLevel);
+        await productCommandRepository.UpdateAsync(product, cancellationToken);
     }
 }

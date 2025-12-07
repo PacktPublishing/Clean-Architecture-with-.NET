@@ -27,10 +27,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure.IntegrationT
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestCommon", "tst\TestCommon\TestCommon.csproj", "{E24C5B91-754A-42AB-A49E-E4AD67A69B28}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Presentation.UnitTests", "tst\Presentation.UnitTests\Presentation.UnitTests.csproj", "{9EC9B213-8C80-490D-B3EB-C56523FAE884}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Presentation.IntegrationTests", "tst\Presentation.IntegrationTests\Presentation.IntegrationTests.csproj", "{E758943E-8E30-4DB4-815A-53F3C5FCDC5E}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,14 +73,6 @@ Global
 		{E24C5B91-754A-42AB-A49E-E4AD67A69B28}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E24C5B91-754A-42AB-A49E-E4AD67A69B28}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E24C5B91-754A-42AB-A49E-E4AD67A69B28}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9EC9B213-8C80-490D-B3EB-C56523FAE884}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9EC9B213-8C80-490D-B3EB-C56523FAE884}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9EC9B213-8C80-490D-B3EB-C56523FAE884}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9EC9B213-8C80-490D-B3EB-C56523FAE884}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E758943E-8E30-4DB4-815A-53F3C5FCDC5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E758943E-8E30-4DB4-815A-53F3C5FCDC5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E758943E-8E30-4DB4-815A-53F3C5FCDC5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E758943E-8E30-4DB4-815A-53F3C5FCDC5E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -100,8 +88,6 @@ Global
 		{1B152EB3-2D64-4402-BF53-52B361EC939A} = {DC814943-23A4-45E8-8D0C-3A47D3E741AB}
 		{481A9A31-998E-422A-9034-651BDF2942E2} = {DC814943-23A4-45E8-8D0C-3A47D3E741AB}
 		{E24C5B91-754A-42AB-A49E-E4AD67A69B28} = {DC814943-23A4-45E8-8D0C-3A47D3E741AB}
-		{9EC9B213-8C80-490D-B3EB-C56523FAE884} = {DC814943-23A4-45E8-8D0C-3A47D3E741AB}
-		{E758943E-8E30-4DB4-815A-53F3C5FCDC5E} = {DC814943-23A4-45E8-8D0C-3A47D3E741AB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {51C2C1FD-BB07-4612-8C8B-39CF68D2D396}

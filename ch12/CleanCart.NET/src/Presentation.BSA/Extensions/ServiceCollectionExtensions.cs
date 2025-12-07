@@ -1,15 +1,13 @@
 ﻿using Domain.Enums;
-using EntityAxis.Abstractions;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using MudBlazor;
 using MudBlazor.Services;
 using Presentation.BSA.Auth;
-using System.Reflection;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace Presentation.BSA.Extensions;
 
@@ -18,8 +16,12 @@ public static class ServiceCollectionExtensions
     public static void AddAzureB2C(this IServiceCollection services, IConfiguration configuration)
     {
         services
-            .AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-            .AddMicrosoftIdentityWebApp(configuration.GetSection("AzureADB2C"));
+            .AddAuthentication(options =>
+            {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+            })
+            .AddMicrosoftIdentityWebApp(configuration.GetSection("AzureAd"));
     }
 
     public static void AddRazorPagesWithAuthorization(this IServiceCollection services, IConfiguration configuration)

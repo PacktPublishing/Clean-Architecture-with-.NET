@@ -1,7 +1,5 @@
 ﻿using Domain.Enums;
 using FluentValidation;
-using System;
-using System.Linq;
 
 namespace Application.Operations.Commands.User;
 

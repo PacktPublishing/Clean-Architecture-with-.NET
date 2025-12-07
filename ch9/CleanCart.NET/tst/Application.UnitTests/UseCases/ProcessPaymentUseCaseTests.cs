@@ -8,106 +8,105 @@ using Domain.Entities;
 using Domain.Enums;
 using Moq;
 
-namespace Application.UnitTests.UseCases
+namespace Application.UnitTests.UseCases;
+
+public class ProcessPaymentUseCaseTests
 {
-    public class ProcessPaymentUseCaseTests
+    [Fact]
+    public async Task ProcessPaymentAsync_PaymentSuccessful_UpdatesOrderStatusToPaid()
     {
-        [Fact]
-        public async Task ProcessPaymentAsync_PaymentSuccessful_UpdatesOrderStatusToPaid()
+        // Arrange
+        var mockMapper = new Mock<IMapper>();
+        mockMapper.Setup(mapper => mapper.Map<List<OrderItem>>(It.IsAny<List<ShoppingCartItem>>()))
+            .Returns((List<ShoppingCartItem> items) => items.ConvertAll(item => new OrderItem(item.ProductId, item.ProductName, item.ProductPrice, item.Quantity)));
+
+        var mockOrderRepository = new Mock<IOrderRepository>();
+        mockOrderRepository.Setup(repo => repo.CreateOrderAsync(It.IsAny<Order>()))
+            .ReturnsAsync((Order order) => order); // Return the order passed to it
+
+        var mockShoppingCartRepository = new Mock<IShoppingCartRepository>();
+        mockShoppingCartRepository.Setup(repo => repo.GetByUserIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync(new ShoppingCart(Guid.NewGuid()));
+
+        var mockPaymentGateway = new Mock<IPaymentGateway>();
+        mockPaymentGateway.Setup(gateway => gateway.ProcessPaymentAsync(It.IsAny<PaymentRequest>()))
+            .ReturnsAsync(new PaymentResult { Status = PaymentStatus.Success });
+
+        var mockCalculateCartTotalUseCase = new Mock<ICalculateCartTotalUseCase>();
+        mockCalculateCartTotalUseCase.Setup(useCase => useCase.CalculateTotalAsync(It.IsAny<CalculateCartTotalInput>()))
+            .ReturnsAsync(100.0m);
+
+        var useCase = new ProcessPaymentUseCase(
+            mockOrderRepository.Object,
+            mockPaymentGateway.Object,
+            mockCalculateCartTotalUseCase.Object,
+            mockShoppingCartRepository.Object,
+            mockMapper.Object);
+
+        var input = new ProcessPaymentInput
         {
-            // Arrange
-            var mockMapper = new Mock<IMapper>();
-            mockMapper.Setup(mapper => mapper.Map<List<OrderItem>>(It.IsAny<List<ShoppingCartItem>>()))
-                .Returns((List<ShoppingCartItem> items) => items.ConvertAll(item => new OrderItem(item.ProductId, item.ProductName, item.ProductPrice, item.Quantity)));
+            UserId = Guid.NewGuid(),
+            Items = new List<ShoppingCartItem>(),
+            CardNumber = "1234567890123456",
+            CardHolderName = "John Doe",
+            ExpirationMonthYear = "12/23",
+            CVV = "123",
+            PostalCode = "12345"
+        };
 
-            var mockOrderRepository = new Mock<IOrderRepository>();
-            mockOrderRepository.Setup(repo => repo.CreateOrderAsync(It.IsAny<Order>()))
-                .ReturnsAsync((Order order) => order); // Return the order passed to it
+        // Act
+        await useCase.ProcessPaymentAsync(input);
 
-            var mockShoppingCartRepository = new Mock<IShoppingCartRepository>();
-            mockShoppingCartRepository.Setup(repo => repo.GetByUserIdAsync(It.IsAny<Guid>()))
-                .ReturnsAsync(new ShoppingCart(Guid.NewGuid()));
+        // Assert
+        mockOrderRepository.Verify(repo => repo.UpdateOrderAsync(It.Is<Order>(o => o.Status == OrderStatus.Paid)), Times.Once);
+    }
 
-            var mockPaymentGateway = new Mock<IPaymentGateway>();
-            mockPaymentGateway.Setup(gateway => gateway.ProcessPaymentAsync(It.IsAny<PaymentRequest>()))
-                .ReturnsAsync(new PaymentResult { Status = PaymentStatus.Success });
+    [Fact]
+    public async Task ProcessPaymentAsync_PaymentFailed_UpdatesOrderStatusToPaymentFailed()
+    {
+        // Arrange
+        var mockMapper = new Mock<IMapper>();
+        mockMapper.Setup(mapper => mapper.Map<List<OrderItem>>(It.IsAny<List<ShoppingCartItem>>()))
+            .Returns((List<ShoppingCartItem> items) => items.ConvertAll(item => new OrderItem(item.ProductId, item.ProductName, item.ProductPrice, item.Quantity)));
 
-            var mockCalculateCartTotalUseCase = new Mock<ICalculateCartTotalUseCase>();
-            mockCalculateCartTotalUseCase.Setup(useCase => useCase.CalculateTotalAsync(It.IsAny<CalculateCartTotalInput>()))
-                .ReturnsAsync(100.0m);
+        var mockOrderRepository = new Mock<IOrderRepository>();
+        mockOrderRepository.Setup(repo => repo.CreateOrderAsync(It.IsAny<Order>()))
+            .ReturnsAsync((Order order) => order); // Return the order passed to it
 
-            var useCase = new ProcessPaymentUseCase(
-                mockOrderRepository.Object,
-                mockPaymentGateway.Object,
-                mockCalculateCartTotalUseCase.Object,
-                mockShoppingCartRepository.Object,
-                mockMapper.Object);
+        var mockShoppingCartRepository = new Mock<IShoppingCartRepository>();
+        mockShoppingCartRepository.Setup(repo => repo.GetByUserIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync(new ShoppingCart(Guid.NewGuid()));
 
-            var input = new ProcessPaymentInput
-            {
-                UserId = Guid.NewGuid(),
-                Items = new List<ShoppingCartItem>(),
-                CardNumber = "1234567890123456",
-                CardHolderName = "John Doe",
-                ExpirationMonthYear = "12/23",
-                CVV = "123",
-                PostalCode = "12345"
-            };
+        var mockPaymentGateway = new Mock<IPaymentGateway>();
+        mockPaymentGateway.Setup(gateway => gateway.ProcessPaymentAsync(It.IsAny<PaymentRequest>()))
+            .ReturnsAsync(new PaymentResult { Status = PaymentStatus.Failed });
 
-            // Act
-            await useCase.ProcessPaymentAsync(input);
+        var mockCalculateCartTotalUseCase = new Mock<ICalculateCartTotalUseCase>();
+        mockCalculateCartTotalUseCase.Setup(useCase => useCase.CalculateTotalAsync(It.IsAny<CalculateCartTotalInput>()))
+            .ReturnsAsync(100.0m);
 
-            // Assert
-            mockOrderRepository.Verify(repo => repo.UpdateOrderAsync(It.Is<Order>(o => o.Status == OrderStatus.Paid)), Times.Once);
-        }
+        var useCase = new ProcessPaymentUseCase(
+            mockOrderRepository.Object,
+            mockPaymentGateway.Object,
+            mockCalculateCartTotalUseCase.Object,
+            mockShoppingCartRepository.Object,
+            mockMapper.Object);
 
-        [Fact]
-        public async Task ProcessPaymentAsync_PaymentFailed_UpdatesOrderStatusToPaymentFailed()
+        var input = new ProcessPaymentInput
         {
-            // Arrange
-            var mockMapper = new Mock<IMapper>();
-            mockMapper.Setup(mapper => mapper.Map<List<OrderItem>>(It.IsAny<List<ShoppingCartItem>>()))
-                .Returns((List<ShoppingCartItem> items) => items.ConvertAll(item => new OrderItem(item.ProductId, item.ProductName, item.ProductPrice, item.Quantity)));
+            UserId = Guid.NewGuid(),
+            Items = new List<ShoppingCartItem>(),
+            CardNumber = "1234567890123456",
+            CardHolderName = "John Doe",
+            ExpirationMonthYear = "12/23",
+            CVV = "123",
+            PostalCode = "12345"
+        };
 
-            var mockOrderRepository = new Mock<IOrderRepository>();
-            mockOrderRepository.Setup(repo => repo.CreateOrderAsync(It.IsAny<Order>()))
-                .ReturnsAsync((Order order) => order); // Return the order passed to it
+        // Act
+        await useCase.ProcessPaymentAsync(input);
 
-            var mockShoppingCartRepository = new Mock<IShoppingCartRepository>();
-            mockShoppingCartRepository.Setup(repo => repo.GetByUserIdAsync(It.IsAny<Guid>()))
-                .ReturnsAsync(new ShoppingCart(Guid.NewGuid()));
-
-            var mockPaymentGateway = new Mock<IPaymentGateway>();
-            mockPaymentGateway.Setup(gateway => gateway.ProcessPaymentAsync(It.IsAny<PaymentRequest>()))
-                .ReturnsAsync(new PaymentResult { Status = PaymentStatus.Failed });
-
-            var mockCalculateCartTotalUseCase = new Mock<ICalculateCartTotalUseCase>();
-            mockCalculateCartTotalUseCase.Setup(useCase => useCase.CalculateTotalAsync(It.IsAny<CalculateCartTotalInput>()))
-                .ReturnsAsync(100.0m);
-
-            var useCase = new ProcessPaymentUseCase(
-                mockOrderRepository.Object,
-                mockPaymentGateway.Object,
-                mockCalculateCartTotalUseCase.Object,
-                mockShoppingCartRepository.Object,
-                mockMapper.Object);
-
-            var input = new ProcessPaymentInput
-            {
-                UserId = Guid.NewGuid(),
-                Items = new List<ShoppingCartItem>(),
-                CardNumber = "1234567890123456",
-                CardHolderName = "John Doe",
-                ExpirationMonthYear = "12/23",
-                CVV = "123",
-                PostalCode = "12345"
-            };
-
-            // Act
-            await useCase.ProcessPaymentAsync(input);
-
-            // Assert
-            mockOrderRepository.Verify(repo => repo.UpdateOrderAsync(It.Is<Order>(o => o.Status == OrderStatus.PaymentFailed)), Times.Once);
-        }
+        // Assert
+        mockOrderRepository.Verify(repo => repo.UpdateOrderAsync(It.Is<Order>(o => o.Status == OrderStatus.PaymentFailed)), Times.Once);
     }
 }

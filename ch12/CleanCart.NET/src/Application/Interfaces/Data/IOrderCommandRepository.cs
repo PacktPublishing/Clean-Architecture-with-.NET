@@ -1,12 +1,9 @@
-﻿using System;
-using Domain.Entities;
-using System.Threading.Tasks;
+﻿using Domain.Entities;
 using EntityAxis.Abstractions;
 
-namespace Application.Interfaces.Data
+namespace Application.Interfaces.Data;
+
+public interface IOrderCommandRepository : ICommandService<Order, Guid>
 {
-    public interface IOrderCommandRepository : ICommandService<Order, Guid>
-    {
-        Task<Order> CreateOrderAsync(Order order);
-    }
+    Task<Order> CreateOrderAsync(Order order);
 }

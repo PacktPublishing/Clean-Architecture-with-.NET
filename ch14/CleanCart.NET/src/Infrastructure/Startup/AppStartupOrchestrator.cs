@@ -24,7 +24,6 @@ using Serilog.Events;
 using Serilog.Extensions.Logging;
 using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 using StartupOrchestration.NET;
-using System;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Infrastructure.Startup;

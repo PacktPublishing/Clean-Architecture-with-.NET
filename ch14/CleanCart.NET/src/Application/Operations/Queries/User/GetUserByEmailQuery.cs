@@ -2,12 +2,7 @@
 
 namespace Application.Operations.Queries.User;
 
-public class GetUserByEmailQuery : IRequest<Domain.Entities.User?>
+public class GetUserByEmailQuery(string email) : IRequest<Domain.Entities.User?>
 {
-    public GetUserByEmailQuery(string email)
-    {
-        Email = email;
-    }
-
-    public string Email { get; }
+    public string Email { get; } = email;
 }

@@ -3,14 +3,12 @@ using AutoMapper;
 using Domain.Entities;
 using Infrastructure.Persistence.EntityFramework;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Persistence.Repositories;
 
 public class ShoppingCartRepository(IDbContextFactory<CoreDbContext> contextFactory, IMapper mapper) : RepositoryBase<CoreDbContext>(contextFactory, mapper), IShoppingCartRepository
 {
-    public async Task<ShoppingCart?> GetByUserIdAsync(Guid userId)
+    public async Task<ShoppingCart> GetByUserIdAsync(Guid userId)
     {
         var dbContext = await ContextFactory.CreateDbContextAsync();
         var sqlShoppingCart = await dbContext.ShoppingCarts.FirstOrDefaultAsync(sc => sc.UserId == userId);
@@ -33,18 +31,5 @@ public class ShoppingCartRepository(IDbContextFactory<CoreDbContext> contextFact
         }
 
         await dbContext.SaveChangesAsync();
-    }
-
-    public async Task DeleteAsync(Guid userId)
-    {
-        var dbContext = await ContextFactory.CreateDbContextAsync();
-
-        var sqlShoppingCart = await dbContext.ShoppingCarts.FirstOrDefaultAsync(sc => sc.UserId == userId);
-
-        if (sqlShoppingCart != null)
-        {
-            dbContext.ShoppingCarts.Remove(sqlShoppingCart);
-            await dbContext.SaveChangesAsync();
-        }
     }
 }

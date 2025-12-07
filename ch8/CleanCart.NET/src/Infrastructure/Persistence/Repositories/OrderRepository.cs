@@ -3,10 +3,6 @@ using AutoMapper;
 using Domain.Entities;
 using Infrastructure.Persistence.EntityFramework;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Persistence.Repositories;
 
@@ -43,16 +39,5 @@ public class OrderRepository(IDbContextFactory<CoreDbContext> contextFactory, IM
             .ToListAsync();
 
         return Mapper.Map<IEnumerable<Order>>(sqlOrders);
-    }
-
-    public async Task<Order?> GetOrderByIdAsync(Guid orderId)
-    {
-        var dbContext = await ContextFactory.CreateDbContextAsync();
-
-        var sqlOrder = await dbContext.Orders
-            .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == orderId);
-
-        return Mapper.Map<Order>(sqlOrder);
     }
 }

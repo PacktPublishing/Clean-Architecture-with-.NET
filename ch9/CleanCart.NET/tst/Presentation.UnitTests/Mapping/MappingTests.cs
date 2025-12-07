@@ -2,6 +2,7 @@
 using AutoFixture;
 using AutoMapper;
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Presentation.BSA;
 using Presentation.BSA.Models.ViewModels;
@@ -15,9 +16,9 @@ public class MappingTests
 
     public MappingTests()
     {
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         var services = new ServiceCollection();
-        var startup = new Startup();
+        var configuration = new ConfigurationBuilder().Build();
+        var startup = new Startup(configuration);
         startup.ConfigureServices(services);
         // Get the real mapper from the service provider
         // Testing the profile itself will not catch runtime errors

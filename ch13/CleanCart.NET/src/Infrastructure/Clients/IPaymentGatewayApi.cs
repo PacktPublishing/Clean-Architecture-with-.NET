@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using Refit;
+﻿using Refit;
 
 namespace Infrastructure.Clients;
 

@@ -1,21 +1,12 @@
-﻿using System;
-using MediatR;
+﻿using MediatR;
 
-namespace Application.Operations.UseCases.AddItemToCart
+namespace Application.Operations.UseCases.AddItemToCart;
+
+public class AddItemToCartCommand(Guid userId, Guid productId, int quantity) : IRequest
 {
-    public class AddItemToCartCommand : IRequest
-    {
-        public AddItemToCartCommand(Guid userId, Guid productId, int quantity)
-        {
-            UserId = userId;
-            ProductId = productId;
-            Quantity = quantity;
-        }
+    public Guid UserId { get; } = userId;
 
-        public Guid UserId { get; }
+    public Guid ProductId { get; } = productId;
 
-        public Guid ProductId { get; }
-
-        public int Quantity { get; }
-    }
+    public int Quantity { get; } = quantity;
 }

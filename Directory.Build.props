@@ -1,0 +1,95 @@
+<Project>
+
+  <!--
+    Directory.Build.props
+    ======================
+    This file defines shared build settings used across all example projects
+    in the book. It exists to remove duplication and to keep each sample focused
+    on the concept being taught, rather than on repetitive project configuration.
+
+    You do not need to modify this file to follow the book. It is simply a
+    centralized place where we configure common build behavior used by all
+    chapters.
+
+    Repository structure
+    ====================
+    The repository follows a simple and consistent layout:
+
+      /src  - contains all production (example) projects for each chapter
+      /tst  - contains all test projects associated with those examples
+
+    Both folders include their own Directory.Build.props files:
+
+      /src/Directory.Build.props
+        Sets:    IsTestProject = false
+        Purpose: Ensures example projects do NOT receive test-only dependencies.
+
+      /tst/Directory.Build.props
+        Sets:    IsTestProject = true
+        Purpose: Allows all test projects to remain minimal and consistent
+                 and for shared test dependencies (xUnit, test SDK, coverage, etc.).
+
+    This root Directory.Build.props provides the shared defaults, while the
+    folder-specific props files provide context that applies only to their
+    respective children.
+
+    How MSBuild applies this
+    =========================
+    MSBuild automatically looks for a file named Directory.Build.props in the
+    current folder and all parent folders. Any settings defined here apply to
+    every project underneath this directory unless the project explicitly
+    overrides them or opts out.
+
+    If you're curious to explore more about MSBuild customization:
+    https://learn.microsoft.com/dotnet/core/project-sdk/overview#directorybuildprops-and-directorybuildtargets
+    https://learn.microsoft.com/visualstudio/msbuild/customize-by-directory?view=visualstudio#directorybuildprops-and-directorybuildtargets
+  -->
+
+  <PropertyGroup>
+    <!-- Shared .NET version for all chapter projects -->
+    <TargetFramework>net10.0</TargetFramework>
+
+    <!-- Consistent compile-time behavior -->
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Analyzer and warning behavior -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <!-- Shared test dependencies applied automatically to test projects -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+
+    <!-- Test infrastructure -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+
+    <!-- Mocking library -->
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+
+    <!-- xUnit test framework -->
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+
+    <!-- Code coverage -->
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+
+  </ItemGroup>
+
+  <!-- Common using directives for test projects -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

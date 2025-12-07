@@ -1,20 +1,69 @@
-﻿using AutoMapper;
+﻿using Application.Interfaces.Data;
+using Application.Interfaces.Services.Payment;
+using Application.Interfaces.UseCases;
 using Infrastructure.Clients;
 using Infrastructure.Configuration;
+using Infrastructure.Mapping;
 using Infrastructure.Persistence.EntityFramework;
+using Infrastructure.Persistence.Repositories;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Refit;
-using System;
-using System.Linq;
 using System.Reflection;
+using Application.Mapping;
+using AutoMapper;
 
 namespace Infrastructure.Extensions;
 
 public static class ServiceCollectionExtensions
 {
+    public static IServiceCollection AddCoreLayerServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Configuration
+        services.AddOptions()
+            .AddTransient(typeof(OptionsFactory<>))
+            .AddTransient(typeof(OptionsMonitor<>))
+            .AddOptions<SqlServerOptions>(configuration)
+            .AddOptions<PaymentGatewayApiOptions>(configuration);
+
+        // Data
+        services.AddSqlServer()
+            .AddScoped<IProductRepository, ProductRepository>()
+            .AddScoped<IOrderRepository, OrderRepository>()
+            .AddScoped<IShoppingCartRepository, ShoppingCartRepository>()
+            .AddScoped<IUserRepository, UserRepository>();
+
+        // Services
+        services.AddScoped<IPaymentGateway, PaymentGateway>();
+
+        // AutoMapper
+        services.AddSingleton<Profile, ApplicationMappingProfile>();
+        services.AddSingleton<Profile, InfrastructureMappingProfile>();
+        services.AddSingleton(serviceProvider =>
+        {
+            var configurationExpression = new MapperConfigurationExpression();
+            var profiles = serviceProvider.GetServices<Profile>();
+            foreach (Profile profile in profiles)
+            {
+                configurationExpression.AddProfile(profile);
+            }
+            configurationExpression.ConstructServicesUsing(serviceProvider.GetService);
+            var mapperConfiguration = new MapperConfiguration(configurationExpression);
+            return mapperConfiguration.CreateMapper();
+        });
+
+        // HttpClients
+        services.AddPaymentGatewayApi();
+
+        // UseCases
+        services.AddUseCases(typeof(IAddItemToCartUseCase));
+
+        return services;
+    }
+
     public static IServiceCollection AddOptions<T>(this IServiceCollection services, IConfiguration configuration) where T : class, new()
     {
         string sectionKey = typeof(T).Name;
@@ -41,7 +90,7 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddSqlServer(this IServiceCollection services)
+    private static IServiceCollection AddSqlServer(this IServiceCollection services)
     {
         services.AddDbContextFactory<CoreDbContext>(
             (serviceProvider, builder) =>
@@ -66,23 +115,7 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static void AddAutoMapper(this IServiceCollection services)
-    {
-        services.AddSingleton(serviceProvider =>
-        {
-            var configurationExpression = new MapperConfigurationExpression();
-            var profiles = serviceProvider.GetServices<Profile>();
-            foreach (Profile profile in profiles)
-            {
-                configurationExpression.AddProfile(profile);
-            }
-            configurationExpression.ConstructServicesUsing(serviceProvider.GetService);
-            var mapperConfiguration = new MapperConfiguration(configurationExpression);
-            return mapperConfiguration.CreateMapper();
-        });
-    }
-
-    public static IServiceCollection AddPaymentGatewayApi(this IServiceCollection services)
+    private static IServiceCollection AddPaymentGatewayApi(this IServiceCollection services)
     {
         services.AddHttpClient<IPaymentGatewayApi>(
             (serviceProvider, client) =>

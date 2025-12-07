@@ -2,47 +2,34 @@
 using Domain.Entities;
 using Domain.Enums;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Application.Operations.UseCases.AccessCustomerData
+namespace Application.Operations.UseCases.AccessCustomerData;
+
+public class AccessCustomerOrderHistoryQueryHandler(
+    IOrderQueryRepository orderQueryRepository,
+    IUserQueryRepository userQueryRepository)
+    : IRequestHandler<AccessCustomerOrderHistoryQuery, IEnumerable<Order>>
 {
-    public class AccessCustomerOrderHistoryQueryHandler : IRequestHandler<AccessCustomerOrderHistoryQuery, IEnumerable<Order>>
+    public async Task<IEnumerable<Order>> Handle(AccessCustomerOrderHistoryQuery query, CancellationToken cancellationToken)
     {
-        private readonly IOrderQueryRepository _orderQueryRepository;
-        private readonly IUserQueryRepository _userQueryRepository;
+        await AuthorizedUserAsync(query.AuthorizationUserId);
 
-        public AccessCustomerOrderHistoryQueryHandler(
-            IOrderQueryRepository orderQueryRepository,
-            IUserQueryRepository userQueryRepository)
+        // Retrieve the order history for the customer by user ID
+        return await orderQueryRepository.GetOrdersByUserIdAsync(query.CustomerUserId);
+    }
+
+    private async Task AuthorizedUserAsync(Guid userId)
+    {
+        var user = await userQueryRepository.GetByIdAsync(userId);
+
+        if (user == null)
         {
-            _orderQueryRepository = orderQueryRepository;
-            _userQueryRepository = userQueryRepository;
+            throw new UnauthorizedAccessException("User not found.");
         }
 
-        public async Task<IEnumerable<Order>> Handle(AccessCustomerOrderHistoryQuery query, CancellationToken cancellationToken)
+        if (!(user.Roles.Contains(UserRole.Administrator) || user.Roles.Contains(UserRole.CustomerService)))
         {
-            await AuthorizedUserAsync(query.AuthorizationUserId);
-
-            // Retrieve the order history for the customer by user ID
-            return await _orderQueryRepository.GetOrdersByUserIdAsync(query.CustomerUserId);
-        }
-
-        private async Task AuthorizedUserAsync(Guid userId)
-        {
-            var user = await _userQueryRepository.GetByIdAsync(userId);
-
-            if (user == null)
-            {
-                throw new UnauthorizedAccessException("User not found.");
-            }
-
-            if (!(user.Roles.Contains(UserRole.Administrator) || user.Roles.Contains(UserRole.CustomerService)))
-            {
-                throw new UnauthorizedAccessException("User is not authorized to access customer data.");
-            }
+            throw new UnauthorizedAccessException("User is not authorized to access customer data.");
         }
     }
 }

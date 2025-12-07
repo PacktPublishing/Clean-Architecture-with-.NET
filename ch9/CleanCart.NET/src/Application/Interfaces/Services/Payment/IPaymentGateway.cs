@@ -1,10 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿namespace Application.Interfaces.Services.Payment;
 
-namespace Application.Interfaces.Services.Payment
+public interface IPaymentGateway
 {
-    public interface IPaymentGateway
-    {
-        Task<PaymentResult> ProcessPaymentAsync(PaymentRequest paymentRequest);
-        Task<PaymentStatus> GetPaymentStatusAsync(string paymentId);
-    }
+    Task<PaymentResult> ProcessPaymentAsync(PaymentRequest paymentRequest);
+    Task<PaymentStatus> GetPaymentStatusAsync(string paymentId);
 }

@@ -1,18 +1,8 @@
-﻿using System;
+﻿namespace Application.UseCases.AddItemToCart;
 
-namespace Application.UseCases.AddItemToCart
+public class AddItemToCartInput(Guid userId, Guid productId, int quantity)
 {
-    public class AddItemToCartInput
-    {
-        public Guid UserId { get; }
-        public Guid ProductId { get; }
-        public int Quantity { get; }
-
-        public AddItemToCartInput(Guid userId, Guid productId, int quantity)
-        {
-            UserId = userId;
-            ProductId = productId;
-            Quantity = quantity;
-        }
-    }
+    public Guid UserId { get; } = userId;
+    public Guid ProductId { get; } = productId;
+    public int Quantity { get; } = quantity;
 }

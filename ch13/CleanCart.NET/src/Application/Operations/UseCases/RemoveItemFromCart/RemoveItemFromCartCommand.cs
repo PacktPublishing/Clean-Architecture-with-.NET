@@ -1,21 +1,12 @@
 ﻿using MediatR;
-using System;
 
-namespace Application.Operations.UseCases.RemoveItemFromCart
+namespace Application.Operations.UseCases.RemoveItemFromCart;
+
+public class RemoveItemFromCartCommand(Guid userId, Guid productId, int quantity) : IRequest
 {
-    public class RemoveItemFromCartCommand : IRequest
-    {
-        public RemoveItemFromCartCommand(Guid userId, Guid productId, int quantity)
-        {
-            UserId = userId;
-            ProductId = productId;
-            Quantity = quantity;
-        }
+    public Guid UserId { get; set; } = userId;
 
-        public Guid UserId { get; set; }
+    public Guid ProductId { get; set; } = productId;
 
-        public Guid ProductId { get; set; }
-
-        public int Quantity { get; }
-    }
+    public int Quantity { get; } = quantity;
 }

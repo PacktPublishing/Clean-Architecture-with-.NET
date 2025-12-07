@@ -58,7 +58,7 @@ public static class AssertHelper
         }
     }
 
-    public static void HasTwoColumnIndex(IProperty property, string columnName1, string columnName2, string indexName = null)
+    public static void HasTwoColumnIndex(IProperty property, string columnName1, string columnName2, string? indexName = null)
     {
         var indexes = property!.GetContainingIndexes().ToList();
         Assert.NotEmpty(indexes);

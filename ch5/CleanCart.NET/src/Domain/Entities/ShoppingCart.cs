@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Domain.Entities;
+﻿namespace Domain.Entities;
 
 public class ShoppingCart(Guid userId)
 {

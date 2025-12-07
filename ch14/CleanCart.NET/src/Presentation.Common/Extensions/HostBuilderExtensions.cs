@@ -62,7 +62,7 @@ public static class HostBuilderExtensions
                 else
                 {
                     // Include specific properties to mask
-                    options.MaskProperties.Add("fullname");
+                    options.MaskProperties.Add(new MaskProperty { Name = "fullname" });
                 }
             });
 

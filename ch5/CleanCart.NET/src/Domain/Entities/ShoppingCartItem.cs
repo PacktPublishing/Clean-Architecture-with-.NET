@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Domain.Entities;
+﻿namespace Domain.Entities;
 
 public class ShoppingCartItem(Guid productId, string productName, decimal productPrice, int quantity)
 {

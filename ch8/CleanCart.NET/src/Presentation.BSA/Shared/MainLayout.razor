@@ -1,4 +1,4 @@
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 
 <MudThemeProvider @bind-IsDarkMode="@_isDarkMode" Theme="_theme" />
 <MudDialogProvider />
@@ -16,9 +16,6 @@
         <MudText>Project Odyssey</MudText>
         <MudSpacer />
         <MudStack Row AlignItems="AlignItems.Center">
-            <AuthorizeView>
-                <ShoppingCartIcon />
-            </AuthorizeView>
             <MudTooltip Arrow Placement="Placement.Bottom" Text="@(_isDarkMode ? "Enable Light Mode" : "Enable Dark Mode")">
                 <MudIconButton Icon="@_themeIcon"
                                Color="Color.Inherit"

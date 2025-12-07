@@ -1,10 +1,8 @@
 ﻿using Application.UseCases.RemoveItemFromCart;
-using System.Threading.Tasks;
 
-namespace Application.Interfaces.UseCases
+namespace Application.Interfaces.UseCases;
+
+public interface IRemoveItemFromCartUseCase
 {
-    public interface IRemoveItemFromCartUseCase
-    {
-        Task RemoveItemFromCartAsync(RemoveItemFromCartInput input);
-    }
+    Task RemoveItemFromCartAsync(RemoveItemFromCartInput input);
 }

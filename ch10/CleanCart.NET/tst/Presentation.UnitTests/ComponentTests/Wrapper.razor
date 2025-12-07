@@ -1,0 +1,29 @@
+﻿@inherits ComponentBase
+
+@* 
+    This wrapper component exists solely for Blazor unit tests.
+
+    Many MudBlazor components (such as tooltips, popovers, dialogs, and snackbars)
+    rely on provider components like <MudPopoverProvider>, <MudDialogProvider>,
+    and <MudSnackbarProvider>. In a real Blazor app, these providers normally live
+    in MainLayout or App.razor, so every page automatically has them available.
+
+    bUnit, however, renders components in isolation and does NOT load your layout.
+    That means any component that expects MudBlazor providers will throw runtime
+    errors during testing unless we supply those providers ourselves.
+
+    This test-only wrapper recreates the minimal environment MudBlazor needs to
+    function, and then exposes a @ChildContent slot where the component under test
+    is rendered. This keeps the test environment lightweight while accurately
+    reflecting the UI infrastructure the component depends on.
+*@
+
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+
+@ChildContent
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

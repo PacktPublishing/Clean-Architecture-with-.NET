@@ -2,12 +2,7 @@
 
 namespace Application.Operations.Queries.User;
 
-public class GetUserByUsernameQuery : IRequest<Domain.Entities.User?>
+public class GetUserByUsernameQuery(string username) : IRequest<Domain.Entities.User?>
 {
-    public GetUserByUsernameQuery(string username)
-    {
-        Username = username;
-    }
-
-    public string Username { get; }
+    public string Username { get; } = username;
 }

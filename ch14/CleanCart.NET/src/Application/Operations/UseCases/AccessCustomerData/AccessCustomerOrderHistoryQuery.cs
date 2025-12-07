@@ -1,19 +1,11 @@
-﻿using System;
-using Domain.Entities;
-using System.Collections.Generic;
+﻿using Domain.Entities;
 using MediatR;
 
-namespace Application.Operations.UseCases.AccessCustomerData
-{
-    public class AccessCustomerOrderHistoryQuery : IRequest<IEnumerable<Order>>
-    {
-        public Guid AuthorizationUserId { get; }
-        public Guid CustomerUserId { get; }
+namespace Application.Operations.UseCases.AccessCustomerData;
 
-        public AccessCustomerOrderHistoryQuery(Guid authorizationUserId, Guid customerUserId)
-        {
-            AuthorizationUserId = authorizationUserId;
-            CustomerUserId = customerUserId;
-        }
-    }
+public class AccessCustomerOrderHistoryQuery(Guid authorizationUserId, Guid customerUserId)
+    : IRequest<IEnumerable<Order>>
+{
+    public Guid AuthorizationUserId { get; } = authorizationUserId;
+    public Guid CustomerUserId { get; } = customerUserId;
 }

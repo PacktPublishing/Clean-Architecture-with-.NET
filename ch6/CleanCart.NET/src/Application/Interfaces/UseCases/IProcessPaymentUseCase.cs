@@ -1,10 +1,8 @@
 ﻿using Application.UseCases.ProcessPayment;
-using System.Threading.Tasks;
 
-namespace Application.Interfaces.UseCases
+namespace Application.Interfaces.UseCases;
+
+public interface IProcessPaymentUseCase
 {
-    public interface IProcessPaymentUseCase
-    {
-        Task ProcessPaymentAsync(ProcessPaymentInput input);
-    }
+    Task ProcessPaymentAsync(ProcessPaymentInput input);
 }

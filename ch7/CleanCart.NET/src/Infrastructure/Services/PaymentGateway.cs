@@ -1,8 +1,6 @@
 ﻿using Application.Interfaces.Services.Payment;
 using Infrastructure.Clients;
 using Refit;
-using System;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Services;
 

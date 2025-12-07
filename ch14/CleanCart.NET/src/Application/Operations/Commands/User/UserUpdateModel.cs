@@ -1,7 +1,5 @@
 ﻿using Domain.Enums;
 using EntityAxis.MediatR.Commands;
-using System;
-using System.Collections.Generic;
 
 namespace Application.Operations.Commands.User;
 

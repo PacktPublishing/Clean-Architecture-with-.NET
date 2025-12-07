@@ -1,35 +1,27 @@
 ﻿using Application.Interfaces.Data;
 using Domain.Entities;
 using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Application.Operations.UseCases.AddItemToCart
+namespace Application.Operations.UseCases.AddItemToCart;
+
+public class AddItemToCartCommandHandler(
+    IShoppingCartQueryRepository shoppingCartQueryRepository,
+    IShoppingCartCommandRepository shoppingCartCommandRepository,
+    IProductQueryRepository productQueryRepository)
+    : IRequestHandler<AddItemToCartCommand>
 {
-    public class AddItemToCartCommandHandler : IRequestHandler<AddItemToCartCommand>
+    public async Task Handle(AddItemToCartCommand command, CancellationToken cancellationToken)
     {
-        private readonly IShoppingCartQueryRepository _shoppingCartQueryRepository;
-        private readonly IShoppingCartCommandRepository _shoppingCartCommandRepository;
-        private readonly IProductQueryRepository _productQueryRepository;
+        ShoppingCart cart = await shoppingCartQueryRepository.GetByUserIdAsync(command.UserId) ?? new ShoppingCart(command.UserId);
+        Product? product = await productQueryRepository.GetByIdAsync(command.ProductId, cancellationToken);
 
-        public AddItemToCartCommandHandler(
-            IShoppingCartQueryRepository shoppingCartQueryRepository,
-            IShoppingCartCommandRepository shoppingCartCommandRepository,
-            IProductQueryRepository productQueryRepository)
+        if (product is null)
         {
-            _shoppingCartQueryRepository = shoppingCartQueryRepository;
-            _shoppingCartCommandRepository = shoppingCartCommandRepository;
-            _productQueryRepository = productQueryRepository;
+            throw new ArgumentException($"Product '{command.ProductId}' does not exist.");
         }
+        
+        cart.AddItem(product, command.Quantity);
 
-        public async Task Handle(AddItemToCartCommand command, CancellationToken cancellationToken)
-        {
-            ShoppingCart cart = await _shoppingCartQueryRepository.GetByUserIdAsync(command.UserId) ?? new ShoppingCart(command.UserId);
-            Product product = await _productQueryRepository.GetByIdAsync(command.ProductId);
-
-            cart.AddItem(product, command.Quantity);
-
-            await _shoppingCartCommandRepository.SaveAsync(cart);
-        }
+        await shoppingCartCommandRepository.SaveAsync(cart);
     }
 }

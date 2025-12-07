@@ -1,15 +1,12 @@
 ﻿using Domain.Entities;
-using System;
-using System.Threading.Tasks;
 
-namespace Application.Interfaces.Data
+namespace Application.Interfaces.Data;
+
+public interface IShoppingCartRepository
 {
-    public interface IShoppingCartRepository
-    {
-        Task<ShoppingCart?> GetByUserIdAsync(Guid userId);
+    Task<ShoppingCart?> GetByUserIdAsync(Guid userId);
 
-        Task SaveAsync(ShoppingCart shoppingCart);
+    Task SaveAsync(ShoppingCart shoppingCart);
 
-        Task DeleteAsync(Guid userId);
-    }
+    Task DeleteAsync(Guid userId);
 }

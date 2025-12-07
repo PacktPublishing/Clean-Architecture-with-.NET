@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Application.UseCases.AddItemToCart;
+﻿namespace Application.UseCases.AddItemToCart;
 
 public class AddItemToCartInput(Guid userId, Guid productId, int quantity)
 {

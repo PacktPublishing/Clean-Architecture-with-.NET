@@ -1,15 +1,11 @@
-﻿using Application.Interfaces.Data;
-using Application.Interfaces.Services.Payment;
+﻿using Application.Interfaces.Services.Payment;
 using Infrastructure.Clients;
 using Infrastructure.Configuration;
 using Infrastructure.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Refit;
-using System;
-using System.Linq;
 
 namespace Infrastructure.Extensions;
 

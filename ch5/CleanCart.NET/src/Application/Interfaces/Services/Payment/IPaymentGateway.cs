@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace Application.Interfaces.Services.Payment;
+﻿namespace Application.Interfaces.Services.Payment;
 
 public interface IPaymentGateway
 {

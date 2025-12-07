@@ -1,34 +1,24 @@
-﻿using System.Linq;
-using Application.Interfaces.Data;
+﻿using Application.Interfaces.Data;
 using Application.Interfaces.UseCases;
-using System.Threading.Tasks;
 using Domain.Entities;
 
-namespace Application.UseCases.RemoveItemFromCart
+namespace Application.UseCases.RemoveItemFromCart;
+
+public class RemoveItemFromCartUseCase(IShoppingCartRepository shoppingCartRepository) : IRemoveItemFromCartUseCase
 {
-    public class RemoveItemFromCartUseCase : IRemoveItemFromCartUseCase
+    public async Task RemoveItemFromCartAsync(RemoveItemFromCartInput input)
     {
-        private readonly IShoppingCartRepository _shoppingCartRepository;
+        ShoppingCart? cart = await shoppingCartRepository.GetByUserIdAsync(input.UserId);
 
-        public RemoveItemFromCartUseCase(IShoppingCartRepository shoppingCartRepository)
+        if (cart != null)
         {
-            _shoppingCartRepository = shoppingCartRepository;
-        }
+            cart.RemoveItem(input.ProductId, input.Quantity);
 
-        public async Task RemoveItemFromCartAsync(RemoveItemFromCartInput input)
-        {
-            ShoppingCart? cart = await _shoppingCartRepository.GetByUserIdAsync(input.UserId);
+            await shoppingCartRepository.SaveAsync(cart);
 
-            if (cart != null)
+            if (!cart.Items.Any())
             {
-                cart.RemoveItem(input.ProductId, input.Quantity);
-
-                await _shoppingCartRepository.SaveAsync(cart);
-
-                if (!cart.Items.Any())
-                {
-                    await _shoppingCartRepository.DeleteAsync(input.UserId);
-                }
+                await shoppingCartRepository.DeleteAsync(input.UserId);
             }
         }
     }

@@ -1,10 +1,8 @@
-﻿using System.Threading.Tasks;
-using Domain.Entities;
+﻿using Domain.Entities;
 
-namespace Application.Interfaces.Auth
+namespace Application.Interfaces.Auth;
+
+public interface IAuthenticationService
 {
-    public interface IAuthenticationService
-    {
-        Task<User?> GetCurrentUserAsync();
-    }
+    Task<User?> GetCurrentUserAsync();
 }

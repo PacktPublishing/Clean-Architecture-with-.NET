@@ -3,7 +3,6 @@ using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using Infrastructure.Extensions;
 using Infrastructure.Persistence.EntityFramework;
-using Infrastructure.Startup;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -70,8 +69,7 @@ public sealed class TestInitializer : IAsyncLifetime
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder().AddCoreLayerConfiguration().Build();
-        var appStartupOrchestrator = new AppStartupOrchestrator();
-        appStartupOrchestrator.Orchestrate(services, configuration);
+        services.AddCoreLayerServices(configuration);
         services.Remove(services.SingleOrDefault(service => typeof(DbContextOptions<CoreDbContext>) == service.ServiceType)!);
         services.Remove(services.SingleOrDefault(service => typeof(DbConnection) == service.ServiceType)!);
         services.AddDbContext<CoreDbContext>(options =>

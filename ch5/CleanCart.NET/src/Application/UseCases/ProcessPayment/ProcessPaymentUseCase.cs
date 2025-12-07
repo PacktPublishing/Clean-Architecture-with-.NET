@@ -4,9 +4,6 @@ using Application.Interfaces.UseCases;
 using Application.UseCases.CalculateCartTotal;
 using Domain.Entities;
 using Domain.Enums;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Application.UseCases.ProcessPayment;
 

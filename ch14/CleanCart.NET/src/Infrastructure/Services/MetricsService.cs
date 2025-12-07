@@ -1,7 +1,5 @@
 ﻿using Application.Interfaces.Services.Telemetry;
-using System.Collections.Generic;
 using System.Diagnostics.Metrics;
-using System.Linq;
 
 namespace Infrastructure.Services;
 

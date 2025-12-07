@@ -5,7 +5,6 @@ using EntityAxis.EntityFramework;
 using EntityAxis.KeyMappers;
 using Infrastructure.Persistence.EntityFramework;
 using Microsoft.EntityFrameworkCore;
-using System;
 
 namespace Infrastructure.Persistence.Repositories;
 

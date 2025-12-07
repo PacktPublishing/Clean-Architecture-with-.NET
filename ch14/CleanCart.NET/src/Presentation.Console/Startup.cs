@@ -3,16 +3,15 @@ using Infrastructure.Startup;
 using Microsoft.Extensions.Configuration;
 using StartupOrchestration.NET;
 
-namespace Presentation.Console
+namespace Presentation.Console;
+
+internal class Startup : StartupOrchestrator<AppStartupOrchestrator>
 {
-    internal class Startup : StartupOrchestrator<AppStartupOrchestrator>
+    protected override void AddConfigurationProviders(IConfigurationBuilder builder)
     {
-        protected override void AddConfigurationProviders(IConfigurationBuilder builder)
-        {
-            string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            string path = Directory.GetParent(assemblyLocation)!.FullName;
-            builder.SetBasePath(path);
-            builder.AddCoreLayerConfiguration();
-        }
+        string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        string path = Directory.GetParent(assemblyLocation)!.FullName;
+        builder.SetBasePath(path);
+        builder.AddCoreLayerConfiguration();
     }
 }

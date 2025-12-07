@@ -84,7 +84,7 @@ Here is an example `dotnet-tools.json` configuration for `dotnet-ef`:
   "isRoot": true,
   "tools": {
     "dotnet-ef": {
-      "version": "8.0.6",
+      "version": "10.0.0",
       "commands": ["dotnet-ef"]
     }
   }

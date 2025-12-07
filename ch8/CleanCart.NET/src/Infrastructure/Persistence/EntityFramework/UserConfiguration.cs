@@ -14,8 +14,5 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(user => user.Email).IsRequired().HasMaxLength(320);
         builder.Property(user => user.FullName).IsRequired().HasMaxLength(100);
         builder.Property(user => user.Roles).IsRequired().HasMaxLength(4000);
-
-        // Add unique index on Username
-        builder.HasIndex(user => user.Username).IsUnique();
     }
 }

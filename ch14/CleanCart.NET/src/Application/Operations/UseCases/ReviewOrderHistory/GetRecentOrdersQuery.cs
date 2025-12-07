@@ -1,16 +1,9 @@
 ﻿using Domain.Entities;
 using MediatR;
-using System;
-using System.Collections.Generic;
 
 namespace Application.Operations.UseCases.ReviewOrderHistory;
 
-public class GetRecentOrdersQuery : IRequest<IEnumerable<Order>>
+public class GetRecentOrdersQuery(TimeSpan withinLast) : IRequest<IEnumerable<Order>>
 {
-    public GetRecentOrdersQuery(TimeSpan withinLast)
-    {
-        WithinLast = withinLast;
-    }
-
-    public TimeSpan WithinLast { get; set; }
+    public TimeSpan WithinLast { get; set; } = withinLast;
 }

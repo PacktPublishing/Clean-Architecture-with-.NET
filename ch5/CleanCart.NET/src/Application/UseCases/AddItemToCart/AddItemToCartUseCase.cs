@@ -1,8 +1,6 @@
 ﻿using Application.Interfaces.Data;
 using Application.Interfaces.UseCases;
 using Domain.Entities;
-using System;
-using System.Threading.Tasks;
 
 namespace Application.UseCases.AddItemToCart;
 

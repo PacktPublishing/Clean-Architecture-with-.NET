@@ -1,5 +1,4 @@
 ﻿using Application.Interfaces.Auth;
-using Application.Interfaces.Data;
 using Application.Operations.UseCases.AccessCustomerData;
 using Domain.Entities;
 using MediatR;

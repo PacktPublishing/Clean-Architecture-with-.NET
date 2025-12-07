@@ -3,8 +3,6 @@ using AutoMapper;
 using Domain.Entities;
 using Infrastructure.Persistence.EntityFramework;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Persistence.Repositories;
 

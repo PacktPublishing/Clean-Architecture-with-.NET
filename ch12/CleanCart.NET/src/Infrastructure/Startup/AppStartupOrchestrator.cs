@@ -20,7 +20,6 @@ using Serilog.Events;
 using Serilog.Extensions.Logging;
 using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 using StartupOrchestration.NET;
-using System;
 using EntityAxis.KeyMappers;
 using EntityAxis.Registration;
 using ILogger = Microsoft.Extensions.Logging.ILogger;

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System;
 
 namespace Infrastructure.Extensions;
 
@@ -12,6 +11,12 @@ public static class ConfigurationBuilderExtensions
 
         configurationBuilder.AddJsonFile("appsettings.core.json", optional: false);
         configurationBuilder.AddJsonFile($"appsettings.core.{environment}.json", optional: false);
+        
+        if (environment.Equals("Development", StringComparison.OrdinalIgnoreCase))
+        {
+            configurationBuilder.AddUserSecrets(typeof(ConfigurationBuilderExtensions).Assembly, optional: true);
+        }
+        
         configurationBuilder.AddEnvironmentVariables();
 
         return configurationBuilder;

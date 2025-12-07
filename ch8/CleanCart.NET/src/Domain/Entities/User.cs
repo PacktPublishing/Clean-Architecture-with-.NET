@@ -1,34 +1,22 @@
 ﻿using Domain.Enums;
-using System;
-using System.Collections.Generic;
 
-namespace Domain.Entities
+namespace Domain.Entities;
+
+public class User(string username, string email, string fullName, List<UserRole> roles)
 {
-    public class User
+    public Guid Id { get; private set; } = Guid.NewGuid();
+    public string Username { get; private set; } = username;
+    public string Email { get; private set; } = email;
+    public string FullName { get; private set; } = fullName;
+    public List<UserRole> Roles { get; } = roles;
+
+    public void AddRole(UserRole role)
     {
-        public Guid Id { get; private set; }
-        public string Username { get; private set; }
-        public string Email { get; private set; }
-        public string FullName { get; private set; }
-        public List<UserRole> Roles { get; }
+        Roles.Add(role);
+    }
 
-        public User(string username, string email, string fullName, List<UserRole> roles)
-        {
-            Id = Guid.NewGuid();
-            Username = username;
-            Email = email;
-            FullName = fullName;
-            Roles = roles;
-        }
-
-        public void AddRole(UserRole role)
-        {
-            Roles.Add(role);
-        }
-
-        public void RemoveRole(UserRole role)
-        {
-            Roles.Remove(role);
-        }
+    public void RemoveRole(UserRole role)
+    {
+        Roles.Remove(role);
     }
 }

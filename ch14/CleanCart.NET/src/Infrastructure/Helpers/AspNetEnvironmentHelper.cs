@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Infrastructure.Helpers;
+﻿namespace Infrastructure.Helpers;
 
 /// <summary>
 /// Provides utility methods and constants for working with the ASP.NET Core runtime environment.
@@ -38,11 +36,20 @@ public static class AspNetEnvironmentHelper
     /// </summary>
     /// <remarks>This method checks the value of the environment variable defined by <see
     /// cref="EnvironmentVariableName"/>  to determine the current environment. Ensure that the environment variable is
-    /// properly configured  before calling this method.</remarks>
+    /// properly configured before calling this method.</remarks>
     /// <returns><see langword="true"/> if the environment variable specified by <see cref="EnvironmentVariableName"/>  is set to
     /// "Development"; otherwise, <see langword="false"/>.</returns>
     public static bool IsDevelopment()
     {
-        return Environment.GetEnvironmentVariable(EnvironmentVariableName) == "Development";
+        return string.Equals(Environment.GetEnvironmentVariable(EnvironmentVariableName), "Development", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Determines whether the current environment is set to "Test", ignoring case.
+    /// </summary>
+    /// <returns><see langword="true"/> if the environment variable is set to "Test" (case-insensitive); otherwise, <see langword="false"/>.</returns>
+    public static bool IsTest()
+    {
+        return string.Equals(Environment.GetEnvironmentVariable(EnvironmentVariableName), "Test", StringComparison.OrdinalIgnoreCase);
     }
 }

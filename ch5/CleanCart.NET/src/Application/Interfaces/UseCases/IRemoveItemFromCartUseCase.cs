@@ -1,5 +1,4 @@
 ﻿using Application.UseCases.RemoveItemFromCart;
-using System.Threading.Tasks;
 
 namespace Application.Interfaces.UseCases;
 

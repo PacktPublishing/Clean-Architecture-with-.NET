@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Application.UseCases.RemoveItemFromCart;
+﻿namespace Application.UseCases.RemoveItemFromCart;
 
 public class RemoveItemFromCartInput(Guid userId, Guid productId, int quantity)
 {

@@ -1,49 +1,38 @@
 ﻿using EntityAxis.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace Domain.Entities
+namespace Domain.Entities;
+
+public class ShoppingCart(Guid userId) : IEntityId<Guid>
 {
-    public class ShoppingCart : IEntityId<Guid>
+    public Guid Id { get; private set; } = Guid.NewGuid();
+    public Guid UserId { get; private set; } = userId;
+    public List<ShoppingCartItem> Items { get; } = new();
+
+    public void AddItem(Product product, int quantity)
     {
-        public Guid Id { get; private set; }
-        public Guid UserId { get; private set; }
-        public List<ShoppingCartItem> Items { get; }
+        var existingItem = Items.SingleOrDefault(i => i.ProductId == product.Id);
 
-        public ShoppingCart(Guid userId)
+        if (existingItem != null)
         {
-            Id = Guid.NewGuid();
-            UserId = userId;
-            Items = new List<ShoppingCartItem>();
+            existingItem.Quantity += quantity;
         }
-
-        public void AddItem(Product product, int quantity)
+        else
         {
-            var existingItem = Items.SingleOrDefault(i => i.ProductId == product.Id);
-
-            if (existingItem != null)
-            {
-                existingItem.Quantity += quantity;
-            }
-            else
-            {
-                Items.Add(new ShoppingCartItem(product.Id, product.Name, product.Price, quantity));
-            }
+            Items.Add(new ShoppingCartItem(product.Id, product.Name, product.Price, quantity));
         }
+    }
 
-        public void RemoveItem(Guid productId, int quantity)
+    public void RemoveItem(Guid productId, int quantity)
+    {
+        var existingItem = Items.SingleOrDefault(i => i.ProductId == productId);
+
+        if (existingItem != null)
         {
-            var existingItem = Items.SingleOrDefault(i => i.ProductId == productId);
+            existingItem.Quantity -= quantity;
 
-            if (existingItem != null)
+            if (existingItem.Quantity <= 0)
             {
-                existingItem.Quantity -= quantity;
-
-                if (existingItem.Quantity <= 0)
-                {
-                    Items.Remove(existingItem);
-                }
+                Items.Remove(existingItem);
             }
         }
     }

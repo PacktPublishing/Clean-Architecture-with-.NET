@@ -51,7 +51,8 @@
     {
         ShoppingCartState.OnChange += UpdateCart;
         _user ??= await AuthenticationService.GetCurrentUserAsync();
-        await RefreshShoppingCart();
+        if (_user != null)
+            await RefreshShoppingCart();
     }
 
     private void OnShoppingCartIconClick()

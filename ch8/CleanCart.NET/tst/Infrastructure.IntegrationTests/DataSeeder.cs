@@ -21,7 +21,7 @@ public class DataSeeder(IDbContextFactory<CoreDbContext> dbContextFactory, IMapp
     public async Task<Product> SeedProduct()
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync();
-        var product = new Product(Guid.NewGuid(), "Test Product", 20.99M, 100, "");
+        var product = new Product(Guid.NewGuid(), "Test Product", 20.99M, 100);
         var sqlProduct = mapper.Map<Infrastructure.Persistence.Entities.Product>(product);
         await dbContext.Products.AddAsync(sqlProduct);
         await dbContext.SaveChangesAsync();

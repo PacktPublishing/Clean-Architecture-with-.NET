@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using System;
 
 namespace Infrastructure.Persistence.Repositories;
 

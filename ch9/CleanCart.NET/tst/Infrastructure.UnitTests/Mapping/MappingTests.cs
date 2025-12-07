@@ -4,7 +4,7 @@ using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
 using FluentAssertions;
-using Infrastructure.Startup;
+using Infrastructure.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -22,8 +22,7 @@ public class MappingTests
         var configuration = new ConfigurationBuilder()
             .AddJsonFile("appsettings.core.json", optional: false)
             .Build();
-        var appStartupOrchestrator = new AppStartupOrchestrator();
-        appStartupOrchestrator.Orchestrate(services, configuration);
+        services.AddCoreLayerServices(configuration);
         Mapper = services.BuildServiceProvider().GetRequiredService<IMapper>();
     }
 

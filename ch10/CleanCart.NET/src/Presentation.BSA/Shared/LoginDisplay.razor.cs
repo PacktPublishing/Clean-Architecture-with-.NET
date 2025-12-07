@@ -16,9 +16,6 @@ public partial class LoginDisplay
     [Inject]
     private IUserRepository UserRepository { get; set; } = null!;
 
-    [Inject]
-    private ILogger<LoginDisplay> Logger { get; set; } = null!;
-
     private ClaimsPrincipal? _user;
     private string DisplayName { get; set; } = string.Empty;
     private string FullName { get; set; } = string.Empty;
@@ -48,9 +45,6 @@ public partial class LoginDisplay
         LastName = _user.GetLastName();
         FullName = $"{FirstName} {LastName}";
         DisplayName = FullName;
-
-        // Log the user's information
-        Logger.LogInformation("User authenticated: {UserId}, Email: {Email}, Name: {FullName}", _user.GetUserId(), Email, FullName);
     }
 
     private async Task EnsureUserCreated()

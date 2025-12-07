@@ -27,34 +27,6 @@ public class MappingTests
     }
 
     [Fact]
-    public void DomainOrderItem_MapsTo_DomainShoppingCartItem()
-    {
-        // Arrange
-        var domainOrderItem = new OrderItem(Guid.NewGuid(), "Test Product", 20, 1);
-        var expected = new ShoppingCartItem(domainOrderItem.ProductId, domainOrderItem.ProductName, domainOrderItem.ProductPrice, domainOrderItem.Quantity);
-
-        // Act
-        var actual = Mapper.Map<ShoppingCartItem>(domainOrderItem);
-
-        // Assert
-        actual.Should().BeEquivalentTo(expected);
-    }
-
-    [Fact]
-    public void DomainShoppingCartItem_MapsTo_DomainOrderItem()
-    {
-        // Arrange
-        var domainShoppingCartItem = new ShoppingCartItem(Guid.NewGuid(), "Test Product", 20, 1);
-        var expected = new OrderItem(domainShoppingCartItem.ProductId, domainShoppingCartItem.ProductName, domainShoppingCartItem.ProductPrice, domainShoppingCartItem.Quantity);
-
-        // Act
-        var actual = Mapper.Map<OrderItem>(domainShoppingCartItem);
-
-        // Assert
-        actual.Should().BeEquivalentTo(expected);
-    }
-
-    [Fact]
     public void DomainOrder_MapsTo_SqlOrder()
     {
         // Arrange

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Domain.Entities;
+﻿namespace Domain.Entities;
 
 public class Product(string name, decimal price, int stockLevel)
 {

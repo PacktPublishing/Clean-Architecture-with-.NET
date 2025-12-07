@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Infrastructure.Persistence.Entities;
+﻿namespace Infrastructure.Persistence.Entities;
 
 public class OrderItem
 {

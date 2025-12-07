@@ -1,37 +1,27 @@
 ﻿using Application.Interfaces.Data;
 using Domain.Entities;
 using MediatR;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Application.Operations.UseCases.RemoveItemFromCart
+namespace Application.Operations.UseCases.RemoveItemFromCart;
+
+public class RemoveItemFromCartCommandHandler(
+    IShoppingCartQueryRepository shoppingCartQueryRepository,
+    IShoppingCartCommandRepository shoppingCartCommandRepository)
+    : IRequestHandler<RemoveItemFromCartCommand>
 {
-    public class RemoveItemFromCartCommandHandler : IRequestHandler<RemoveItemFromCartCommand>
+    public async Task Handle(RemoveItemFromCartCommand command, CancellationToken cancellationToken)
     {
-        private readonly IShoppingCartQueryRepository _shoppingCartQueryRepository;
-        private readonly IShoppingCartCommandRepository _shoppingCartCommandRepository;
+        ShoppingCart? cart = await shoppingCartQueryRepository.GetByUserIdAsync(command.UserId);
 
-        public RemoveItemFromCartCommandHandler(IShoppingCartQueryRepository shoppingCartQueryRepository, IShoppingCartCommandRepository shoppingCartCommandRepository)
+        if (cart != null)
         {
-            _shoppingCartQueryRepository = shoppingCartQueryRepository;
-            _shoppingCartCommandRepository = shoppingCartCommandRepository;
-        }
+            cart.RemoveItem(command.ProductId, command.Quantity);
 
-        public async Task Handle(RemoveItemFromCartCommand command, CancellationToken cancellationToken)
-        {
-            ShoppingCart? cart = await _shoppingCartQueryRepository.GetByUserIdAsync(command.UserId);
+            await shoppingCartCommandRepository.UpdateAsync(cart, cancellationToken);
 
-            if (cart != null)
+            if (!cart.Items.Any())
             {
-                cart.RemoveItem(command.ProductId, command.Quantity);
-
-                await _shoppingCartCommandRepository.UpdateAsync(cart, cancellationToken);
-
-                if (!cart.Items.Any())
-                {
-                    await _shoppingCartCommandRepository.DeleteByUserIdAsync(command.UserId);
-                }
+                await shoppingCartCommandRepository.DeleteByUserIdAsync(command.UserId);
             }
         }
     }

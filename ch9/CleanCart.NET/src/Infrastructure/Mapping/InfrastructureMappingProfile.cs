@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
-using System;
-using System.Linq;
 
 namespace Infrastructure.Mapping;
 

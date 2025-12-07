@@ -1,5 +1,4 @@
 ﻿using Application.UseCases.CalculateCartTotal;
-using System.Threading.Tasks;
 
 namespace Application.Interfaces.UseCases;
 

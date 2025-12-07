@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Infrastructure.Persistence.Entities;
+﻿namespace Infrastructure.Persistence.Entities;
 
 public class Order
 {

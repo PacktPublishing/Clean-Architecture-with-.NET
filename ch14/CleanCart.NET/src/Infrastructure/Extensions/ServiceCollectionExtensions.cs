@@ -7,8 +7,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Refit;
-using System;
-using System.Linq;
 using Infrastructure.HealthChecks;
 
 namespace Infrastructure.Extensions;

@@ -1,21 +1,12 @@
 ﻿using MediatR;
-using System;
 
-namespace Application.Operations.UseCases.ManageProductInventory
+namespace Application.Operations.UseCases.ManageProductInventory;
+
+public class UpdateProductInventoryCommand(Guid userId, Guid productId, int stockLevel) : IRequest
 {
-    public class UpdateProductInventoryCommand : IRequest
-    {
-        public UpdateProductInventoryCommand(Guid userId, Guid productId, int stockLevel)
-        {
-            UserId = userId;
-            ProductId = productId;
-            StockLevel = stockLevel;
-        }
+    public Guid UserId { get; } = userId;
 
-        public Guid UserId { get; }
+    public Guid ProductId { get; } = productId;
 
-        public Guid ProductId { get; }
-
-        public int StockLevel { get; }
-    }
+    public int StockLevel { get; } = stockLevel;
 }

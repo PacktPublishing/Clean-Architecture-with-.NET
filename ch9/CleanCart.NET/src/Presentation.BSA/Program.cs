@@ -1,3 +1,6 @@
+using Infrastructure.Extensions;
+using Presentation.BSA.Extensions;
+
 namespace Presentation.BSA;
 
 public static class Program
@@ -12,5 +15,13 @@ public static class Program
             .ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder.UseStartup<Startup>();
+                webBuilder.ConfigureAppConfiguration((hostingContext, config) =>
+                {
+                    string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                    string path = Directory.GetParent(assemblyLocation)!.FullName;
+                    config.SetBasePath(path);
+                    config.AddCoreLayerConfiguration();
+                    config.AddPresentationLayerConfiguration();
+                });
             });
 }

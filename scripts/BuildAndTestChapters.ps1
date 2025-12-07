@@ -1,39 +1,178 @@
-# Define the base directory
-$baseDir = "$($PSScriptRoot)\.."
+param(
+    [string]$Chapter = "3"  # Optional chapter filter (e.g., "ch3" or "3"
+)
 
-# Get all solution files in the repository
-$solutionFiles = Get-ChildItem -Path $baseDir -Filter "*.sln" -Recurse
+# Disable built-in PowerShell progress indicators (prevents deletion spam)
+$ProgressPreference = 'SilentlyContinue'
 
-# Loop through each solution file
-foreach ($solutionFile in $solutionFiles) {
-    # Get the chapter folder name (e.g., ch1, ch2, etc.)
-    $chapterFolder = Split-Path -Path (Split-Path -Path $solutionFile.DirectoryName -Parent) -Leaf
+# Stop immediately on errors
+$ErrorActionPreference = "Stop"
 
-    Write-Host "Building and testing solution for $chapterFolder..."
+Write-Host ""
+Write-Host "============================================="
+Write-Host " Validate Solutions for Clean-Architecture-with-.NET"
+Write-Host "============================================="
+Write-Host ""
 
-    # Navigate to the solution directory
-    Set-Location -Path $solutionFile.DirectoryName
+# Expected repo root folder name
+$expectedRoot = "Clean-Architecture-with-.NET"
 
-    # Build the solution
-    dotnet build $solutionFile.FullName
+# Determine repo root relative to script location
+$baseDir = Resolve-Path "$PSScriptRoot\.."
 
-    # Check if the build was successful
-    if ($?) {
-        Write-Host "Build successful for $chapterFolder."
+# ======================================================
+# SAFETY CHECK
+# ======================================================
+if ($baseDir -notmatch [regex]::Escape($expectedRoot)) {
+    Write-Host "ERROR: Script is NOT running inside the expected repository ('$expectedRoot')." -ForegroundColor Red
+    Write-Host "Actual path: $baseDir"
+    Write-Host "Aborting to avoid accidental deletion." -ForegroundColor Red
+    exit 1
+}
 
-        # Run tests
-        dotnet test $solutionFile.FullName
+Write-Host "Repository root validated: $baseDir" -ForegroundColor Green
+Write-Host ""
 
-        # Check if the tests were successful
-        if ($?) {
-            Write-Host "Tests passed for $chapterFolder."
-        } else {
-            Write-Host "Tests failed for $chapterFolder."
-        }
-    } else {
-        Write-Host "Build failed for $chapterFolder."
+# ======================================================
+# LOCATE ALL SOLUTION FILES
+# ======================================================
+$solutionFiles = Get-ChildItem -Path $baseDir -Recurse | Where-Object { $_.Extension -in ".sln", ".slnx" }
+
+if ($solutionFiles.Count -eq 0) {
+    Write-Host "No solution files found." -ForegroundColor Yellow
+    exit 1
+}
+
+# ======================================================
+# OPTIONAL: FILTER BY CHAPTER
+# ======================================================
+if ($Chapter) {
+
+    # Normalize: "10" --> "ch10"
+    if ($Chapter -notmatch "^ch\d+$") {
+        $Chapter = "ch$Chapter"
     }
 
-    # Return to the base directory
-    Set-Location -Path $baseDir
+    Write-Host "Targeting ONLY chapter: $Chapter" -ForegroundColor Cyan
+
+    $solutionFiles = $solutionFiles | Where-Object {
+        # Extract chapter folder from path
+        $solutionDir = $_.DirectoryName
+        $chapterFolder = Split-Path -Path (Split-Path -Path $solutionDir -Parent) -Leaf
+
+        $chapterFolder -ieq $Chapter
+    }
+
+    if ($solutionFiles.Count -eq 0) {
+        Write-Host "No solutions found for chapter '$Chapter'." -ForegroundColor Yellow
+        exit 1
+    }
 }
+
+# ======================================================
+# PROCESS EACH SOLUTION
+# ======================================================
+foreach ($solutionFile in $solutionFiles) {
+
+    $solutionDir = $solutionFile.DirectoryName
+    $chapterFolder = Split-Path -Path (Split-Path -Path $solutionDir -Parent) -Leaf
+
+    Write-Host ""
+    Write-Host "============================================="
+    Write-Host " CLEAN → BUILD → TEST for: $chapterFolder"
+    Write-Host " Solution: $($solutionFile.Name)"
+    Write-Host "============================================="
+    Write-Host ""
+
+    Push-Location $solutionDir
+
+    # ------------------------------------------
+    # CLEANUP ONLY THIS SOLUTION'S bin/obj
+    # ------------------------------------------
+    Write-Host "→ Cleaning bin/obj for $chapterFolder..."
+
+    $localBinObj = Get-ChildItem -Path $solutionDir -Recurse -Directory -Include bin,obj
+
+    if ($localBinObj.Count -gt 0) {
+        Write-Host "   ... cleaning ..."
+    }
+
+    foreach ($folder in $localBinObj) {
+
+        # Extra safety: ensure folder is truly inside repo root
+        if (-not $folder.FullName.StartsWith($baseDir, [System.StringComparison]::OrdinalIgnoreCase)) {
+            continue
+        }
+
+        # Perform removal silently
+        Remove-Item $folder.FullName -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    # ------------------------------------------
+    # RESTORE → BUILD → TEST (with environment override)
+    # ------------------------------------------
+    try {
+        Write-Host "→ Restoring..."
+        dotnet restore $solutionFile.FullName
+
+        Write-Host "→ Building..."
+        dotnet build $solutionFile.FullName --no-restore
+
+        # ============================
+        # ENVIRONMENT OVERRIDE FOR TESTING
+        # ============================
+
+        $originalEnv = $Env:ASPNETCORE_ENVIRONMENT
+
+        if ([string]::IsNullOrWhiteSpace($originalEnv)) {
+            Write-Host "→ Current ASPNETCORE_ENVIRONMENT: <not set>" -ForegroundColor Yellow
+        }
+        else {
+            Write-Host "→ Current ASPNETCORE_ENVIRONMENT: $originalEnv" -ForegroundColor Yellow
+        }
+
+        Write-Host "→ Setting ASPNETCORE_ENVIRONMENT=Development for test execution..." -ForegroundColor Cyan
+        $Env:ASPNETCORE_ENVIRONMENT = "Development"
+
+        # Run tests
+        Write-Host "→ Running tests..."
+        dotnet test $solutionFile.FullName --no-build
+
+        # ============================
+        # RESTORE ORIGINAL ENVIRONMENT
+        # ============================
+        if ([string]::IsNullOrWhiteSpace($originalEnv)) {
+            Write-Host "→ Restoring ASPNETCORE_ENVIRONMENT: <removed>" -ForegroundColor Yellow
+            Remove-Item Env:ASPNETCORE_ENVIRONMENT -ErrorAction SilentlyContinue
+        }
+        else {
+            Write-Host "→ Restoring ASPNETCORE_ENVIRONMENT: $originalEnv" -ForegroundColor Yellow
+            $Env:ASPNETCORE_ENVIRONMENT = $originalEnv
+        }
+
+        Write-Host ""
+        Write-Host "✔ SUCCESS: $chapterFolder" -ForegroundColor Green
+    }
+    catch {
+        Write-Host ""
+        Write-Host "✖ FAILURE in $chapterFolder" -ForegroundColor Red
+        Write-Host $_
+
+        # Attempt to restore env variable even after failure
+        if ($originalEnv) {
+            $Env:ASPNETCORE_ENVIRONMENT = $originalEnv
+        }
+        else {
+            Remove-Item Env:ASPNETCORE_ENVIRONMENT -ErrorAction SilentlyContinue
+        }
+    }
+    finally {
+        Pop-Location
+    }
+}
+
+Write-Host ""
+Write-Host "============================================="
+Write-Host " Validation Complete"
+Write-Host "============================================="
+Write-Host ""

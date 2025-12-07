@@ -35,7 +35,7 @@ public static class ServiceCollectionExtensions
                     // Add ActivitySource for tracing
                     .AddSource(fvi.ProductName!);
 
-                if (!AspNetEnvironmentHelper.IsDevelopment())
+                if (!AspNetEnvironmentHelper.IsDevelopment() && !AspNetEnvironmentHelper.IsTest())
                 {
                     builder.AddAzureMonitorTraceExporter();
                 }
@@ -54,7 +54,7 @@ public static class ServiceCollectionExtensions
                     .AddMeter("Microsoft.AspNetCore.Hosting")
                     .AddMeter("Microsoft.AspNetCore.Server.Kestrel");
 
-                if (!AspNetEnvironmentHelper.IsDevelopment())
+                if (!AspNetEnvironmentHelper.IsDevelopment() && !AspNetEnvironmentHelper.IsTest())
                 {
                     builder.AddAzureMonitorMetricExporter();
                 }

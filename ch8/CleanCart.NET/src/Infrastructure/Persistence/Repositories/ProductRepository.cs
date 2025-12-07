@@ -3,21 +3,11 @@ using AutoMapper;
 using Domain.Entities;
 using Infrastructure.Persistence.EntityFramework;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Persistence.Repositories;
 
 public class ProductRepository(IDbContextFactory<CoreDbContext> contextFactory, IMapper mapper) : RepositoryBase<CoreDbContext>(contextFactory, mapper), IProductRepository
 {
-    public async Task<List<Product>> GetAllAsync()
-    {
-        var dbContext = await ContextFactory.CreateDbContextAsync();
-        var sqlProducts = await dbContext.Products.ToListAsync(); // ToListAsync disconnects the context
-        return Mapper.Map<List<Product>>(sqlProducts);
-    }
-
     public async Task<Product> GetByIdAsync(Guid id)
     {
         var dbContext = await ContextFactory.CreateDbContextAsync();
