@@ -18,7 +18,7 @@ public class RemoveItemFromCartUseCase(IShoppingCartRepository shoppingCartRepos
 
             if (!cart.Items.Any())
             {
-                await shoppingCartRepository.DeleteAsync(input.UserId);
+                await shoppingCartRepository.DeleteByUserIdAsync(input.UserId);
             }
         }
     }

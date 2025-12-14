@@ -28,13 +28,10 @@ public class MappingTests
     [Fact]
     public void CheckoutViewModel_MapsTo_ProcessPaymentCommand()
     {
-        // Arrange
         var checkoutViewModel = AutoFixture.Create<CheckoutViewModel>();
 
-        // Act
         var processPaymentCommand = Mapper.Map<ProcessPaymentCommand>(checkoutViewModel);
 
-        // Assert
         processPaymentCommand.Should().BeEquivalentTo(checkoutViewModel);
     }
 }

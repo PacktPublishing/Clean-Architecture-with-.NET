@@ -12,7 +12,6 @@ public class DbSetUserTests : IAsyncLifetime
 
     public DbSetUserTests(TestInitializer testInitializer)
     {
-        // Arrange
         using CoreDbContext dbContext = testInitializer.DbContextFactory.CreateDbContext();
 
         string? entityKey = typeof(User).FullName;

@@ -5,12 +5,17 @@ namespace Domain.Entities;
 public class ShoppingCart(Guid userId) : IEntityId<Guid>
 {
     public Guid Id { get; private set; } = Guid.NewGuid();
-    public Guid UserId { get; private set; } = userId;
-    public List<ShoppingCartItem> Items { get; } = new();
+    public Guid UserId { get; } = userId;
 
-    public void AddItem(Product product, int quantity)
+    // Preserve encapsulation via a read-only view
+    public IReadOnlyCollection<ShoppingCartItem> Items => _items.AsReadOnly();
+
+    // Keep the mutable list private
+    private readonly List<ShoppingCartItem> _items = new();
+
+    public void AddItem(Guid productId, string productName, decimal productPrice, int quantity)
     {
-        var existingItem = Items.SingleOrDefault(i => i.ProductId == product.Id);
+        var existingItem = _items.SingleOrDefault(i => i.ProductId == productId);
 
         if (existingItem != null)
         {
@@ -18,13 +23,13 @@ public class ShoppingCart(Guid userId) : IEntityId<Guid>
         }
         else
         {
-            Items.Add(new ShoppingCartItem(product.Id, product.Name, product.Price, quantity));
+            _items.Add(new ShoppingCartItem(productId, productName, productPrice, quantity));
         }
     }
 
     public void RemoveItem(Guid productId, int quantity)
     {
-        var existingItem = Items.SingleOrDefault(i => i.ProductId == productId);
+        var existingItem = _items.SingleOrDefault(i => i.ProductId == productId);
 
         if (existingItem != null)
         {
@@ -32,7 +37,7 @@ public class ShoppingCart(Guid userId) : IEntityId<Guid>
 
             if (existingItem.Quantity <= 0)
             {
-                Items.Remove(existingItem);
+                _items.Remove(existingItem);
             }
         }
     }

@@ -18,36 +18,29 @@ public class ShoppingCartRepositoryTest(TestInitializer testInitializer) : IAsyn
     [Fact]
     public async Task Can_GetByUserIdAsync()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var user = await seeder.SeedUser();
         var product = await seeder.SeedProduct();
         var expectedShoppingCart = await seeder.SeedShoppingCart(user, product);
 
-        // Act
         var returnedShoppingCart = await Sut.GetByUserIdAsync(user.Id);
 
-        // Assert
         returnedShoppingCart.Should().BeEquivalentTo(expectedShoppingCart);
     }
 
     [Fact]
     public async Task Can_SaveAsync_WhenCartExists()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var user = await seeder.SeedUser();
         var product1 = await seeder.SeedProduct();
         var product2 = await seeder.SeedProduct();
         var shoppingCart = await seeder.SeedShoppingCart(user, product1);
 
-        // Modify shopping cart
-        shoppingCart.Items.Add(new ShoppingCartItem(product2.Id, product2.Name, product2.Price, 2));
+        shoppingCart.AddItem(product2.Id, product2.Name, product2.Price, 2);
 
-        // Act
         await Sut.SaveAsync(shoppingCart);
 
-        // Assert
         var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var savedShoppingCart = _mapper.Map<ShoppingCart>(await dbContext.ShoppingCarts.FirstOrDefaultAsync(sc => sc.UserId == user.Id));
         savedShoppingCart.Should().BeEquivalentTo(shoppingCart);
@@ -56,17 +49,14 @@ public class ShoppingCartRepositoryTest(TestInitializer testInitializer) : IAsyn
     [Fact]
     public async Task Can_SaveAsync_WhenCartDoesNotExist()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var user = await seeder.SeedUser();
         var product = await seeder.SeedProduct();
         var shoppingCart = new ShoppingCart(user.Id);
-        shoppingCart.Items.Add(new ShoppingCartItem(product.Id, product.Name, product.Price, 1));
+        shoppingCart.AddItem(product.Id, product.Name, product.Price, 1);
 
-        // Act
         await Sut.SaveAsync(shoppingCart);
 
-        // Assert
         var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var sqlShoppingCart = await dbContext.ShoppingCarts.FirstOrDefaultAsync(sc => sc.UserId == user.Id);
         var returnedShoppingCart = _mapper.Map<ShoppingCart>(sqlShoppingCart);

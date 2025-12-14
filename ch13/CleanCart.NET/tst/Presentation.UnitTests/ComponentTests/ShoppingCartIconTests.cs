@@ -5,7 +5,7 @@ using Domain.Entities;
 using Domain.Enums;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
+using NSubstitute;
 using MudBlazor;
 using MudBlazor.Services;
 using Presentation.BSA.Components;
@@ -15,15 +15,15 @@ namespace Presentation.UnitTests.ComponentTests;
 
 public class ShoppingCartIconTests
 {
-    private readonly Mock<IAuthenticationService> _authMock = new();
-    private readonly Mock<IMediator> _mediator = new();
+    private readonly IAuthenticationService _authMock = Substitute.For<IAuthenticationService>();
+    private readonly IMediator _mediator = Substitute.For<IMediator>();
 
     private readonly ShoppingCartState _cartState = new();
 
     private void ConfigureServices(BunitContext ctx)
     {
-        ctx.Services.AddScoped(_ => _authMock.Object);
-        ctx.Services.AddScoped(_ => _mediator.Object);
+        ctx.Services.AddScoped(_ => _authMock);
+        ctx.Services.AddScoped(_ => _mediator);
         ctx.Services.AddScoped(_ => _cartState);
 
         ctx.Services.AddMudServices();
@@ -49,10 +49,10 @@ public class ShoppingCartIconTests
         ConfigureServices(ctx);
 
         var user = new User("username@example.com", "username@example.com", "Test User", new List<UserRole>());
-        _authMock.Setup(a => a.GetCurrentUserAsync()).ReturnsAsync(user);
+        _authMock.GetCurrentUserAsync().Returns(user);
 
         var cart = new ShoppingCart(user.Id);
-        _mediator.Setup(m => m.Send(It.IsAny<AccessCustomerShoppingCartQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(cart);
+        _mediator.Send(Arg.Any<AccessCustomerShoppingCartQuery>(), Arg.Any<CancellationToken>()).Returns(cart);
 
         var cut = ctx.Render<Wrapper>(p => p.AddChildContent<ShoppingCartIcon>());
 
@@ -72,16 +72,16 @@ public class ShoppingCartIconTests
         ConfigureServices(ctx);
 
         var user = new User("username@example.com", "username@example.com", "Test User", new List<UserRole>());
-        _authMock.Setup(a => a.GetCurrentUserAsync()).ReturnsAsync(user);
+        _authMock.GetCurrentUserAsync().Returns(user);
 
-        var p1 = new Product(Guid.NewGuid(), "Product 1", 10.00m, 10, "img.png");
-        var p2 = new Product(Guid.NewGuid(), "Product 2", 20.00m, 10, "img.png");
+        var p1 = new Product("Product 1", 10.00m, 10, "img.png");
+        var p2 = new Product("Product 2", 20.00m, 10, "img.png");
 
         var cart = new ShoppingCart(user.Id);
-        cart.AddItem(p1, 5);
-        cart.AddItem(p2, 5);
+        cart.AddItem(p1.Id, p1.Name, p1.Price, 5);
+        cart.AddItem(p2.Id, p2.Name, p2.Price, 5);
 
-        _mediator.Setup(m => m.Send(It.IsAny<AccessCustomerShoppingCartQuery>(), It.IsAny<CancellationToken>())).ReturnsAsync(cart);
+        _mediator.Send(Arg.Any<AccessCustomerShoppingCartQuery>(), Arg.Any<CancellationToken>()).Returns(cart);
 
         var cut = ctx.Render<Wrapper>(p => p.AddChildContent<ShoppingCartIcon>());
 

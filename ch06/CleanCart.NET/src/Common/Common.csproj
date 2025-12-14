@@ -4,9 +4,4 @@
     <Folder Include="Extensions\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- Lock AutoMapper version before it becomes commercial at v15 -->
-    <PackageReference Include="AutoMapper" Version="[14.0.0]" />
-  </ItemGroup>
-
 </Project>

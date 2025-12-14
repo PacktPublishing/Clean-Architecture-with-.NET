@@ -2,7 +2,7 @@
 using Application.UseCases.ManageProductInventory;
 using Domain.Entities;
 using Domain.Enums;
-using Moq;
+using NSubstitute;
 
 namespace Application.UnitTests.UseCases;
 
@@ -11,51 +11,44 @@ public class ManageProductInventoryUseCaseTests
     [Fact]
     public async Task UpdateProductInventoryAsync_AdministratorRole_UpdatesStockLevel()
     {
-        // Arrange
         var userId = Guid.NewGuid();
-        var productId = Guid.NewGuid();
+        var product = new Product("Product Name", 10.0m, 10, "img.png");
         var stockLevel = 20;
 
-        var userRepository = new Mock<IUserRepository>();
-        userRepository.Setup(repo => repo.GetByIdAsync(userId))
-            .ReturnsAsync(new User("jdoe", "jdoe@example.com", "John Doe", new List<UserRole> { UserRole.Administrator }));
+        var userRepository = Substitute.For<IUserRepository>();
+        userRepository.GetByIdAsync(userId)
+            .Returns(new User("jdoe", "jdoe@example.com", "John Doe", new List<UserRole> { UserRole.Administrator }));
 
-        var productRepository = new Mock<IProductRepository>();
-        productRepository.Setup(repo => repo.GetByIdAsync(productId))
-            .ReturnsAsync(new Product(productId, "Product Name", 10.0m, 10, ""));
+        var productRepository = Substitute.For<IProductRepository>();
+        productRepository.GetByIdAsync(product.Id)
+            .Returns(product);
 
-        var useCase = new ManageProductInventoryUseCase(userRepository.Object, productRepository.Object);
+        var useCase = new ManageProductInventoryUseCase(userRepository, productRepository);
 
-        // Act
-        await useCase.UpdateProductInventoryAsync(userId, productId, stockLevel);
+        await useCase.UpdateProductInventoryAsync(userId, product.Id, stockLevel);
 
-        // Assert
-        productRepository.Verify(repo => repo.UpdateAsync(It.Is<Product>(p => p.StockLevel == stockLevel)), Times.Once);
+        await productRepository.Received(1).UpdateAsync(Arg.Is<Product>(p => p.StockLevel == stockLevel));
     }
 
     [Fact]
     public async Task UpdateProductInventoryAsync_InvalidRole_ThrowsUnauthorizedAccessException()
     {
-        // Arrange
         var userId = Guid.NewGuid();
-        var productId = Guid.NewGuid();
+        var product = new Product("Product Name", 10.0m, 10, "img.png");
         var stockLevel = 20;
 
         // Simulate a user with a non-administrator role
-        var userRepository = new Mock<IUserRepository>();
-        userRepository.Setup(repo => repo.GetByIdAsync(userId))
-            .ReturnsAsync(new User("userName", "user@example.com", "John Doe", new List<UserRole> { UserRole.CustomerService }));
+        var userRepository = Substitute.For<IUserRepository>();
+        userRepository.GetByIdAsync(userId)
+            .Returns(new User("userName", "user@example.com", "John Doe", new List<UserRole> { UserRole.CustomerService }));
 
-        var productRepository = new Mock<IProductRepository>();
-        productRepository.Setup(repo => repo.GetByIdAsync(productId))
-            .ReturnsAsync(new Product(productId, "Product Name", 10.0m, 10, ""));
+        var productRepository = Substitute.For<IProductRepository>();
+        productRepository.GetByIdAsync(product.Id).Returns(product);
 
-        var useCase = new ManageProductInventoryUseCase(userRepository.Object, productRepository.Object);
+        var useCase = new ManageProductInventoryUseCase(userRepository, productRepository);
 
-        // Act and Assert
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => useCase.UpdateProductInventoryAsync(userId, productId, stockLevel));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => useCase.UpdateProductInventoryAsync(userId, product.Id, stockLevel));
 
-        // Verify that the product's stock level was not updated
-        productRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Product>()), Times.Never);
+        await productRepository.Received(0).UpdateAsync(Arg.Any<Product>());
     }
 }

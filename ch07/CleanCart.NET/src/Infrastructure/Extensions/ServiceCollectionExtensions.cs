@@ -1,5 +1,7 @@
-﻿using Application.Interfaces.Data;
+﻿using System.Reflection;
+using Application.Interfaces.Data;
 using Application.Interfaces.Services.Payment;
+using Application.Interfaces.UseCases;
 using Infrastructure.Clients;
 using Infrastructure.Configuration;
 using Infrastructure.Mapping;
@@ -40,6 +42,9 @@ public static class ServiceCollectionExtensions
 
         // HttpClients
         services.AddPaymentGatewayApi();
+
+        // UseCases
+        services.AddUseCases(typeof(IAddItemToCartUseCase));
 
         return services;
     }
@@ -104,6 +109,31 @@ public static class ServiceCollectionExtensions
                 client.BaseAddress = new Uri(options.BaseUrl);
             }
         ).AddTypedClient(RestService.For<IPaymentGatewayApi>);
+        return services;
+    }
+
+    public static IServiceCollection AddUseCases(this IServiceCollection services, Type knownInterface)
+    {
+        var assembly = Assembly.GetAssembly(knownInterface);
+        if (assembly == null) throw new InvalidOperationException("Assembly could not be found.");
+
+        var interfaceNamespace = knownInterface.Namespace;
+        if (interfaceNamespace == null) throw new InvalidOperationException("Namespace could not be determined.");
+
+        var interfaces = assembly.GetTypes()
+            .Where(t => t.IsInterface && t.Namespace == interfaceNamespace);
+
+        foreach (var @interface in interfaces)
+        {
+            var implementation = assembly.GetTypes()
+                .FirstOrDefault(t => t.IsClass && !t.IsAbstract && @interface.IsAssignableFrom(t));
+
+            if (implementation != null)
+            {
+                services.AddScoped(@interface, implementation);
+            }
+        }
+
         return services;
     }
 }

@@ -11,8 +11,8 @@ namespace Application.Operations.UseCases.ProcessPayment;
 public class ProcessPaymentCommandHandler(
     IOrderCommandRepository orderCommandRepository,
     IPaymentGateway paymentGateway,
-    IMediator mediator,
     IShoppingCartCommandRepository shoppingCartCommandRepository,
+    IMediator mediator,
     IMapper mapper)
     : IRequestHandler<ProcessPaymentCommand, Order>
 {
@@ -54,7 +54,9 @@ public class ProcessPaymentCommandHandler(
                 await orderCommandRepository.UpdateAsync(order, cancellationToken);
                 break;
             default:
-                throw new ArgumentOutOfRangeException();
+#pragma warning disable S3928 // Parameter names used into ArgumentException constructors should match an existing one 
+                throw new ArgumentOutOfRangeException(nameof(paymentResult.Status));
+#pragma warning restore S3928 // Parameter names used into ArgumentException constructors should match an existing one 
         }
 
         return order;

@@ -11,11 +11,22 @@ public class AddItemToCartUseCase(
 {
     public async Task AddItemToCartAsync(AddItemToCartInput input)
     {
-        ShoppingCart cart = await shoppingCartRepository.GetByUserIdAsync(input.UserId) ?? new ShoppingCart(input.UserId);
-        Product product = await productRepository.GetByIdAsync(input.ProductId);
+        Product? product = await productRepository.GetByIdAsync(input.ProductId);
 
-        cart.AddItem(product, input.Quantity);
+        if (product is null)
+            return; // Alternatively, throw an exception or handle the error as needed
 
-        await shoppingCartRepository.SaveAsync(cart);
+        if (product.StockLevel < input.Quantity)
+        {
+            throw new InvalidOperationException(
+                $"Not enough stock for '{product.Name}'. Requested: {input.Quantity}, Available: {product.StockLevel}");
+        }
+
+        var shoppingCart = await shoppingCartRepository.GetByUserIdAsync(input.UserId)
+                           ?? new ShoppingCart(input.UserId);
+
+        shoppingCart.AddItem(product.Id, product.Name, product.Price, input.Quantity);
+
+        await shoppingCartRepository.SaveAsync(shoppingCart);
     }
 }

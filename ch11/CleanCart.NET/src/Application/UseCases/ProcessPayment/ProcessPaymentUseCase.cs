@@ -11,8 +11,8 @@ namespace Application.UseCases.ProcessPayment;
 public class ProcessPaymentUseCase(
     IOrderRepository orderRepository,
     IPaymentGateway paymentGateway,
-    ICalculateCartTotalUseCase calculateCartTotalUseCase,
     IShoppingCartRepository shoppingCartRepository,
+    ICalculateCartTotalUseCase calculateCartTotalUseCase,
     IMapper mapper)
     : IProcessPaymentUseCase
 {
@@ -24,10 +24,9 @@ public class ProcessPaymentUseCase(
 
         var orderItems = mapper.Map<List<OrderItem>>(input.Items);
         var order = new Order(input.UserId, orderItems, totalAmount);
-
         order = await orderRepository.CreateOrderAsync(order);
 
-        await shoppingCartRepository.DeleteAsync(input.UserId);
+        await shoppingCartRepository.DeleteByUserIdAsync(input.UserId);
 
         var paymentRequest = new PaymentRequest
         {
@@ -55,7 +54,9 @@ public class ProcessPaymentUseCase(
                 await orderRepository.UpdateOrderAsync(order);
                 break;
             default:
-                throw new ArgumentOutOfRangeException();
+#pragma warning disable S3928 // Parameter names used into ArgumentException constructors should match an existing one 
+                throw new ArgumentOutOfRangeException(nameof(paymentResult.Status));
+#pragma warning restore S3928 // Parameter names used into ArgumentException constructors should match an existing one 
         }
 
         return order;

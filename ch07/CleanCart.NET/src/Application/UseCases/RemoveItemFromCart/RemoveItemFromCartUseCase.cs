@@ -8,10 +8,18 @@ public class RemoveItemFromCartUseCase(IShoppingCartRepository shoppingCartRepos
 {
     public async Task RemoveItemFromCartAsync(RemoveItemFromCartInput input)
     {
-        ShoppingCart cart = await shoppingCartRepository.GetByUserIdAsync(input.UserId);
+        ShoppingCart? cart = await shoppingCartRepository.GetByUserIdAsync(input.UserId);
 
-        cart.RemoveItem(input.ProductId, input.Quantity);
+        if (cart != null)
+        {
+            cart.RemoveItem(input.ProductId, input.Quantity);
 
-        await shoppingCartRepository.SaveAsync(cart);
+            await shoppingCartRepository.SaveAsync(cart);
+
+            if (!cart.Items.Any())
+            {
+                await shoppingCartRepository.DeleteByUserIdAsync(input.UserId);
+            }
+        }
     }
 }

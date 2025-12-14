@@ -15,7 +15,7 @@ public class ProductRepository(IDbContextFactory<CoreDbContext> contextFactory, 
         return Mapper.Map<List<Product>>(sqlProducts);
     }
 
-    public async Task<Product> GetByIdAsync(Guid id)
+    public async Task<Product?> GetByIdAsync(Guid id)
     {
         var dbContext = await ContextFactory.CreateDbContextAsync();
         var sqlProduct = await dbContext.Products.FirstOrDefaultAsync(p => p.Id == id);

@@ -29,17 +29,14 @@ public class MappingTests
     [Fact]
     public void DomainOrder_MapsTo_SqlOrder()
     {
-        // Arrange
         var items = new List<OrderItem>
         {
             new(Guid.NewGuid(), "Test Product", 20, 1)
         };
         var domainOrder = new Order(Guid.NewGuid(), items, 20);
 
-        // Act
         var sqlOrder = Mapper.Map<Infrastructure.Persistence.Entities.Order>(domainOrder);
 
-        // Assert
         sqlOrder.Should().BeEquivalentTo(domainOrder, options => options.Excluding(o => o.Status));
         sqlOrder.Status.Should().Be(domainOrder.Status.ToString());
     }
@@ -47,14 +44,11 @@ public class MappingTests
     [Fact]
     public void SqlOrder_MapsTo_DomainOrder()
     {
-        // Arrange
         var sqlOrder = Fixture.Create<Infrastructure.Persistence.Entities.Order>();
         sqlOrder.Status = OrderStatus.Pending.ToString();
 
-        // Act
         var domainOrder = Mapper.Map<Order>(sqlOrder);
 
-        // Assert
         domainOrder.Should().BeEquivalentTo(sqlOrder, options =>
         {
             options.Excluding(o => o.NavUser);
@@ -67,84 +61,69 @@ public class MappingTests
     [Fact]
     public void DomainProduct_MapsTo_SqlProduct()
     {
-        // Arrange
         var domainProduct = Fixture.Create<Product>();
 
-        // Act
         var sqlProduct = Mapper.Map<Infrastructure.Persistence.Entities.Product>(domainProduct);
 
-        // Assert
         sqlProduct.Should().BeEquivalentTo(domainProduct);
     }
 
     [Fact]
     public void SqlProduct_MapsTo_DomainProduct()
     {
-        // Arrange
         var sqlProduct = Fixture.Create<Infrastructure.Persistence.Entities.Product>();
 
-        // Act
         var domainProduct = Mapper.Map<Product>(sqlProduct);
 
-        // Assert
         domainProduct.Should().BeEquivalentTo(sqlProduct);
     }
 
     [Fact]
     public void DomainShoppingCart_MapsTo_SqlShoppingCart()
     {
-        // Arrange
-        var items = new List<ShoppingCartItem>
+        var cartItems = new List<ShoppingCartItem>
         {
             new(Guid.NewGuid(), "Test Product", 20, 1)
         };
         var domainShoppingCart = new ShoppingCart(Guid.NewGuid());
-        domainShoppingCart.Items.AddRange(items);
+        foreach (var cartItem in cartItems)
+        {
+            domainShoppingCart.AddItem(cartItem.ProductId, cartItem.ProductName, cartItem.ProductPrice, cartItem.Quantity);
+        }
 
-        // Act
         var sqlShoppingCart = Mapper.Map<Infrastructure.Persistence.Entities.ShoppingCart>(domainShoppingCart);
 
-        // Assert
         sqlShoppingCart.Should().BeEquivalentTo(domainShoppingCart);
     }
 
     [Fact]
     public void SqlShoppingCart_MapsTo_DomainShoppingCart()
     {
-        // Arrange
         var sqlShoppingCart = Fixture.Create<Infrastructure.Persistence.Entities.ShoppingCart>();
 
-        // Act
         var domainShoppingCart = Mapper.Map<ShoppingCart>(sqlShoppingCart);
 
-        // Assert
         domainShoppingCart.Should().BeEquivalentTo(sqlShoppingCart);
     }
 
     [Fact]
     public void DomainUser_MapsTo_SqlUser()
     {
-        // Arrange
         var domainUser = Fixture.Create<User>();
 
-        // Act
         var sqlUser = Mapper.Map<Infrastructure.Persistence.Entities.User>(domainUser);
 
-        // Assert
         sqlUser.Should().BeEquivalentTo(domainUser);
     }
 
     [Fact]
     public void SqlUser_MapsTo_DomainUser()
     {
-        // Arrange
         var sqlUser = Fixture.Create<Infrastructure.Persistence.Entities.User>();
         sqlUser.Roles = [UserRole.CustomerService.ToString()];
 
-        // Act
         var domainUser = Mapper.Map<User>(sqlUser);
 
-        // Assert
         domainUser.Should().BeEquivalentTo(sqlUser);
     }
 

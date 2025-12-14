@@ -26,13 +26,10 @@ public class ConfigurationBuilderExtensionsTests
     [Fact]
     public void Configuration_ShouldLoad_BaseSettings()
     {
-        // Arrange
         string expectedInstance = "[Enter the Login URL https://<your-tenant-name>.ciamlogin.com/]";
 
-        // Act
         string? instanceValue = _configuration["AzureAd:Authority"];
 
-        // Assert
         instanceValue.Should().NotBeNullOrEmpty();
         instanceValue.Should().Be(expectedInstance);
     }
@@ -40,13 +37,10 @@ public class ConfigurationBuilderExtensionsTests
     [Fact]
     public void Configuration_ShouldLoad_TestEnvironmentOverrides()
     {
-        // Arrange
         string expectedClientId = "test-callback-path"; // From appsettings.test.json
 
-        // Act
         string? clientIdValue = _configuration["AzureAd:CallbackPath"];
 
-        // Assert
         clientIdValue.Should().NotBeNullOrEmpty();
         clientIdValue.Should().Be(expectedClientId);
     }
@@ -54,13 +48,10 @@ public class ConfigurationBuilderExtensionsTests
     [Fact]
     public void KeyVault_ShouldOverride_TestConfiguration()
     {
-        // Arrange
         string expectedClientId = "b7856a91-feb0-4789-adc7-7467fe779054"; // From Azure Key Vault
 
-        // Act
         string? clientIdValue = _configuration["AzureAd:ClientId"];
 
-        // Assert
         clientIdValue.Should().NotBeNullOrEmpty();
         clientIdValue.Should().Be(expectedClientId);
     }
@@ -68,13 +59,10 @@ public class ConfigurationBuilderExtensionsTests
     [Fact]
     public void EnvironmentVariables_ShouldOverride_AllOtherSources()
     {
-        // Arrange
         string expectedClientId = "env-tenant-id"; // From environment variable
 
-        // Act
         string? clientIdValue = _configuration["AzureAd:TenantId"];
 
-        // Assert
         clientIdValue.Should().NotBeNullOrEmpty();
         clientIdValue.Should().Be(expectedClientId);
     }

@@ -2,7 +2,6 @@
 using Application.Interfaces.Services.Payment;
 using Application.Interfaces.UseCases;
 using Application.UseCases.CalculateCartTotal;
-using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
 
@@ -11,23 +10,21 @@ namespace Application.UseCases.ProcessPayment;
 public class ProcessPaymentUseCase(
     IOrderRepository orderRepository,
     IPaymentGateway paymentGateway,
-    ICalculateCartTotalUseCase calculateCartTotalUseCase,
-    IMapper mapper)
+    IShoppingCartRepository shoppingCartRepository,
+    ICalculateCartTotalUseCase calculateCartTotalUseCase)
     : IProcessPaymentUseCase
 {
-    public async Task ProcessPaymentAsync(ProcessPaymentInput input)
+    public async Task<Order> ProcessPaymentAsync(ProcessPaymentInput input)
     {
-        var calculateTotalInput = new CalculateCartTotalInput
-        {
-            UserId = input.UserId
-        };
+        var calculateTotalInput = new CalculateCartTotalInput(input.UserId);
 
         decimal totalAmount = await calculateCartTotalUseCase.CalculateTotalAsync(calculateTotalInput);
 
-        var orderItems = mapper.Map<List<OrderItem>>(input.Items);
+        var orderItems = input.Items.Select(i => new OrderItem(i.ProductId, i.ProductName, i.ProductPrice, i.Quantity));
         var order = new Order(input.UserId, orderItems, totalAmount);
+        order = await orderRepository.CreateOrderAsync(order);
 
-        await orderRepository.CreateOrderAsync(order);
+        await shoppingCartRepository.DeleteByUserIdAsync(input.UserId);
 
         var paymentRequest = new PaymentRequest
         {
@@ -55,7 +52,11 @@ public class ProcessPaymentUseCase(
                 await orderRepository.UpdateOrderAsync(order);
                 break;
             default:
-                throw new ArgumentOutOfRangeException();
+#pragma warning disable S3928 // Parameter names used into ArgumentException constructors should match an existing one 
+                throw new ArgumentOutOfRangeException(nameof(paymentResult.Status));
+#pragma warning restore S3928 // Parameter names used into ArgumentException constructors should match an existing one 
         }
+
+        return order;
     }
 }

@@ -18,28 +18,22 @@ public class ProductQueryRepositoryTests(TestInitializer testInitializer) : IAsy
     [Fact]
     public async Task Can_GetProductByIdAsync()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var existingProduct = await seeder.SeedProduct();
 
-        // Act
         var product = await Sut.GetByIdAsync(existingProduct.Id);
 
-        // Assert
         product.Should().BeEquivalentTo(existingProduct);
     }
 
     [Fact]
     public async Task Can_GetAllProductsAsync()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var existingProducts = await Task.WhenAll(Enumerable.Range(0, 5).Select(_ => seeder.SeedProduct()));
 
-        // Act
         var products = await Sut.GetAllAsync();
 
-        // Assert
         products.Should().BeEquivalentTo(existingProducts);
     }
 

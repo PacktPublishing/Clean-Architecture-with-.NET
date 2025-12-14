@@ -4,7 +4,7 @@ using Bunit;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
+using NSubstitute;
 using MudBlazor;
 using MudBlazor.Services;
 using Presentation.BSA.Components;
@@ -14,19 +14,19 @@ namespace Presentation.UnitTests.ComponentTests;
 
 public class ShoppingCartIconTests
 {
-    private readonly Mock<IAuthenticationService> _authMock = new();
-    private readonly Mock<IProductRepository> _productRepoMock = new();
-    private readonly Mock<IShoppingCartRepository> _cartRepoMock = new();
-    private readonly Mock<IUserRepository> _userRepoMock = new();
+    private readonly IAuthenticationService _authMock = Substitute.For<IAuthenticationService>();
+    private readonly IProductRepository _productRepoMock = Substitute.For<IProductRepository>();
+    private readonly IShoppingCartRepository _cartRepoMock = Substitute.For<IShoppingCartRepository>();
+    private readonly IUserRepository _userRepoMock = Substitute.For<IUserRepository>();
 
     private readonly ShoppingCartState _cartState = new();
 
     private void ConfigureServices(BunitContext ctx)
     {
-        ctx.Services.AddScoped(_ => _authMock.Object);
-        ctx.Services.AddScoped(_ => _productRepoMock.Object);
-        ctx.Services.AddScoped(_ => _cartRepoMock.Object);
-        ctx.Services.AddScoped(_ => _userRepoMock.Object);
+        ctx.Services.AddScoped(_ => _authMock);
+        ctx.Services.AddScoped(_ => _productRepoMock);
+        ctx.Services.AddScoped(_ => _cartRepoMock);
+        ctx.Services.AddScoped(_ => _userRepoMock);
         ctx.Services.AddScoped(_ => _cartState);
 
         ctx.Services.AddMudServices();
@@ -52,10 +52,10 @@ public class ShoppingCartIconTests
         ConfigureServices(ctx);
 
         var user = new User("username@example.com", "username@example.com", "Test User", new List<UserRole>());
-        _authMock.Setup(a => a.GetCurrentUserAsync()).ReturnsAsync(user);
+        _authMock.GetCurrentUserAsync().Returns(user);
 
         var cart = new ShoppingCart(user.Id);
-        _cartRepoMock.Setup(r => r.GetByUserIdAsync(user.Id)).ReturnsAsync(cart);
+        _cartRepoMock.GetByUserIdAsync(user.Id).Returns(cart);
 
         var cut = ctx.Render<Wrapper>(p => p.AddChildContent<ShoppingCartIcon>());
 
@@ -75,16 +75,16 @@ public class ShoppingCartIconTests
         ConfigureServices(ctx);
 
         var user = new User("username@example.com", "username@example.com", "Test User", new List<UserRole>());
-        _authMock.Setup(a => a.GetCurrentUserAsync()).ReturnsAsync(user);
+        _authMock.GetCurrentUserAsync().Returns(user);
 
-        var p1 = new Product(Guid.NewGuid(), "Product 1", 10.00m, 10, "img.png");
-        var p2 = new Product(Guid.NewGuid(), "Product 2", 20.00m, 10, "img.png");
+        var p1 = new Product("Product 1", 10.00m, 10, "img.png");
+        var p2 = new Product("Product 2", 20.00m, 10, "img.png");
 
         var cart = new ShoppingCart(user.Id);
-        cart.AddItem(p1, 5);
-        cart.AddItem(p2, 5);
+        cart.AddItem(p1.Id, p1.Name, p1.Price, 5);
+        cart.AddItem(p2.Id, p2.Name, p2.Price, 5);
 
-        _cartRepoMock.Setup(r => r.GetByUserIdAsync(user.Id)).ReturnsAsync(cart);
+        _cartRepoMock.GetByUserIdAsync(user.Id).Returns(cart);
 
         var cut = ctx.Render<Wrapper>(p => p.AddChildContent<ShoppingCartIcon>());
 

@@ -19,22 +19,18 @@ public class UserQueryRepositoryTests(TestInitializer testInitializer) : IAsyncL
     [Fact]
     public async Task Can_GetByIdAsync()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var existingUser = await seeder.SeedUser();
         var expectedUser = _mapper.Map<User>(existingUser);
 
-        // Act
         var user = await Sut.GetByIdAsync(existingUser.Id);
 
-        // Assert
         user.Should().BeEquivalentTo(expectedUser);
     }
 
     [Fact]
     public async Task Can_GetAllAsync()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var seedTasks = Enumerable.Range(0, 3).Select(_ => seeder.SeedUser()).ToList();
         await Task.WhenAll(seedTasks);
@@ -42,38 +38,30 @@ public class UserQueryRepositoryTests(TestInitializer testInitializer) : IAsyncL
         var existingUsers = dbContext.Users.ToList();
         var expectedUsers = _mapper.Map<List<User>>(existingUsers);
 
-        // Act
         var users = await Sut.GetAllAsync();
 
-        // Assert
         users.Should().BeEquivalentTo(expectedUsers);
     }
 
     [Fact]
     public async Task Can_GetByUsernameAsync()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var existingUser = await seeder.SeedUser();
 
-        // Act
         var returnedUser = await Sut.GetByUsernameAsync(existingUser.Username);
 
-        // Assert
         returnedUser.Should().BeEquivalentTo(existingUser);
     }
 
     [Fact]
     public async Task Can_GetByEmailAsync()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var existingUser = await seeder.SeedUser();
 
-        // Act
         var returnedUser = await Sut.GetByEmailAsync(existingUser.Email);
 
-        // Assert
         returnedUser.Should().BeEquivalentTo(existingUser);
     }
 

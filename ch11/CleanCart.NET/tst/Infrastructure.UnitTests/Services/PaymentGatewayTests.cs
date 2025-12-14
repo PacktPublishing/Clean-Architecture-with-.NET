@@ -2,7 +2,7 @@
 using Application.Interfaces.Services.Payment;
 using Infrastructure.Clients;
 using Infrastructure.Services;
-using Moq;
+using NSubstitute;
 using Refit;
 
 namespace Infrastructure.UnitTests.Services;
@@ -12,39 +12,33 @@ public class PaymentGatewayTests
     [Fact]
     public async Task ProcessPaymentAsync_ReturnsPaymentResult()
     {
-        // Arrange
-        var mockApi = new Mock<IPaymentGatewayApi>();
+        var mockApi = Substitute.For<IPaymentGatewayApi>();
         var mockApiResponse = new ApiResponse<string>(new HttpResponseMessage(HttpStatusCode.Created), string.Empty, new RefitSettings());
-        mockApi.Setup(x => x.ProcessPaymentAsync(It.IsAny<object>())).ReturnsAsync(mockApiResponse);
+        mockApi.ProcessPaymentAsync(Arg.Any<object>()).Returns(mockApiResponse);
         var paymentRequest = new PaymentRequest();
-        var paymentGateway = new PaymentGateway(mockApi.Object);
+        var paymentGateway = new PaymentGateway(mockApi);
 
-        // Act
         var result = await paymentGateway.ProcessPaymentAsync(paymentRequest);
 
-        // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result.TransactionId);
         Assert.Equal(PaymentStatus.Success, result.Status);
         Assert.True(result.Timestamp <= DateTime.UtcNow);
-        mockApi.Verify(x => x.ProcessPaymentAsync(It.IsAny<object>()), Times.Once);
+        await mockApi.Received(1).ProcessPaymentAsync(Arg.Any<object>());
     }
 
     [Fact]
     public async Task GetPaymentStatusAsync_ReturnsPaymentStatus()
     {
-        // Arrange
-        var mockApi = new Mock<IPaymentGatewayApi>();
+        var mockApi = Substitute.For<IPaymentGatewayApi>();
         var mockApiResponse = new ApiResponse<string>(new HttpResponseMessage(HttpStatusCode.OK), string.Empty, new RefitSettings());
-        mockApi.Setup(x => x.GetPaymentStatusAsync(It.IsAny<string>())).ReturnsAsync(mockApiResponse);
+        mockApi.GetPaymentStatusAsync(Arg.Any<string>()).Returns(mockApiResponse);
         var paymentId = "paymentId";
-        var paymentGateway = new PaymentGateway(mockApi.Object);
+        var paymentGateway = new PaymentGateway(mockApi);
 
-        // Act
         var result = await paymentGateway.GetPaymentStatusAsync(paymentId);
 
-        // Assert
         Assert.Equal(PaymentStatus.Success, result);
-        mockApi.Verify(x => x.GetPaymentStatusAsync(It.IsAny<string>()), Times.Once);
+        await mockApi.Received(1).GetPaymentStatusAsync(Arg.Any<string>());
     }
 }

@@ -12,7 +12,6 @@ public class DbSetProductTests : IAsyncLifetime
 
     public DbSetProductTests(TestInitializer testInitializer)
     {
-        // Arrange
         using CoreDbContext dbContext = testInitializer.DbContextFactory.CreateDbContext();
 
         string? entityKey = typeof(Product).FullName;

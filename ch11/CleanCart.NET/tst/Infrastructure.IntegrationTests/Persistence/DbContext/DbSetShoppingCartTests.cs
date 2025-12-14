@@ -14,7 +14,6 @@ public class DbSetShoppingCartTests : IAsyncLifetime
 
     public DbSetShoppingCartTests(TestInitializer testInitializer)
     {
-        // Arrange
         using CoreDbContext dbContext = testInitializer.DbContextFactory.CreateDbContext();
 
         string? entityKey = typeof(ShoppingCart).FullName;

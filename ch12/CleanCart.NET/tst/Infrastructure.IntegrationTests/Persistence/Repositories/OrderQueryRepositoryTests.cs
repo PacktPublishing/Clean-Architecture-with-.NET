@@ -19,7 +19,6 @@ public class OrderQueryRepositoryTests(TestInitializer testInitializer) : IAsync
     [Fact]
     public async Task Can_GetOrdersByUserIdAsync()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var user = await seeder.SeedUser();
         var product = await seeder.SeedProduct();
@@ -28,10 +27,8 @@ public class OrderQueryRepositoryTests(TestInitializer testInitializer) : IAsync
         existingOrders.AddRange(await Task.WhenAll(orderTasks));
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-        // Act
         var returnedOrders = await Sut.GetOrdersByUserIdAsync(user.Id);
 
-        // Assert
         returnedOrders.Should().BeEquivalentTo(existingOrders);
     }
 

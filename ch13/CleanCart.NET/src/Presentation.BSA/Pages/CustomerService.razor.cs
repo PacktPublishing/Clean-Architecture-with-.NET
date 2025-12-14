@@ -15,7 +15,7 @@ public partial class CustomerService
 {
     private Severity _severity = Severity.Info;
     private string _severityText = "Search for a customer's cart or order history.";
-    private string _customerId = string.Empty;
+    private string _customerUserId = string.Empty;
     private bool _showShoppingCart;
     private bool _showOrderHistory;
     private User? _customer;
@@ -36,19 +36,19 @@ public partial class CustomerService
 
     private async Task LoadCustomer()
     {
-        if (!Guid.TryParse(_customerId, out var customerIdGuid))
+        if (!Guid.TryParse(_customerUserId, out var customerUserIdGuid))
         {
             _shoppingCart = null;
             _customer = null;
         }
 
-        var query = new GetEntityByIdQuery<User, Guid>(customerIdGuid);
+        var query = new GetEntityByIdQuery<User, Guid>(customerUserIdGuid);
         _customer = await Mediator.Send(query);
     }
 
-    private async Task LoadCart(string customerId)
+    private async Task LoadCart(string customerUserId)
     {
-        _customerId = customerId;
+        _customerUserId = customerUserId;
         // Reset the cart for the new customer
         _shoppingCart = null;
         await LoadCustomer();
@@ -76,9 +76,9 @@ public partial class CustomerService
         }
     }
 
-    private async Task LoadOrderHistory(string customerId)
+    private async Task LoadOrderHistory(string customerUserId)
     {
-        _customerId = customerId;
+        _customerUserId = customerUserId;
         // Reset the order history for the new customer
         _orderHistory.Clear();
         _shoppingCart = null;

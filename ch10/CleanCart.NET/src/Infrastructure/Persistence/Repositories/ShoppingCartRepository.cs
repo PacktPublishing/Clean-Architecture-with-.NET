@@ -33,7 +33,7 @@ public class ShoppingCartRepository(IDbContextFactory<CoreDbContext> contextFact
         await dbContext.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(Guid userId)
+    public async Task DeleteByUserIdAsync(Guid userId)
     {
         var dbContext = await ContextFactory.CreateDbContextAsync();
 

@@ -3,10 +3,10 @@
 <PageTitle>Customer Service</PageTitle>
 
 <MudText Typo="Typo.h3">Customer Service</MudText>
-<MudTextField @bind-Value="_customerId"
+<MudTextField @bind-Value="_customerUserId"
               Label="Customer ID" />
-<MudButton Color="Color.Primary" OnClick="() => LoadCart(_customerId)">Shopping Cart</MudButton>
-<MudButton Color="Color.Primary" OnClick="() => LoadOrderHistory(_customerId)">Order History</MudButton>
+<MudButton Color="Color.Primary" OnClick="() => LoadCart(_customerUserId)">Shopping Cart</MudButton>
+<MudButton Color="Color.Primary" OnClick="() => LoadOrderHistory(_customerUserId)">Order History</MudButton>
 
 @if (_shoppingCart != null && _showShoppingCart)
 {

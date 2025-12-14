@@ -17,30 +17,24 @@ public class ProductRepositoryTests(TestInitializer testInitializer) : IAsyncLif
     [Fact]
     public async Task Can_GetProductByIdAsync()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var existingProduct = await seeder.SeedProduct();
 
-        // Act
         var product = await Sut.GetByIdAsync(existingProduct.Id);
 
-        // Assert
         product.Should().BeEquivalentTo(existingProduct);
     }
 
     [Fact]
     public async Task Can_UpdateAsync()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var existingProduct = await seeder.SeedProduct();
         existingProduct.UpdateStockLevel(existingProduct.StockLevel + 1000);
         var domainProduct = _mapper.Map<Domain.Entities.Product>(existingProduct);
 
-        // Act
         await Sut.UpdateAsync(domainProduct);
 
-        // Assert
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var updatedProduct = await dbContext.Products.FirstAsync(p => p.Id == existingProduct.Id);
         updatedProduct.Should().BeEquivalentTo(existingProduct);

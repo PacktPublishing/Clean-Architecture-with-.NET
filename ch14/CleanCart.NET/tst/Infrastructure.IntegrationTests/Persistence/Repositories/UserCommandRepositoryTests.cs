@@ -20,14 +20,11 @@ public class UserCommandRepositoryTests(TestInitializer testInitializer) : IAsyn
     [Fact]
     public async Task Can_CreateUserAsync()
     {
-        // Arrange
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var newUser = new User($"{Guid.NewGuid()}@email.com", $"{Guid.NewGuid()}@email.com", "test", [UserRole.CustomerService]);
 
-        // Act
         await Sut.CreateAsync(newUser);
 
-        // Assert
         var createdUser = await dbContext.Users.FirstAsync(u => u.Id == newUser.Id);
         createdUser.Should().BeEquivalentTo(newUser);
     }
@@ -35,16 +32,13 @@ public class UserCommandRepositoryTests(TestInitializer testInitializer) : IAsyn
     [Fact]
     public async Task Can_UpdateUserAsync()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var existingUser = await seeder.SeedUser();
         existingUser.AddRole(UserRole.Administrator);
         var existingDomainUser = _mapper.Map<User>(existingUser);
 
-        // Act
         await Sut.UpdateAsync(existingDomainUser);
 
-        // Assert
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var updatedUser = await dbContext.Users.FirstAsync(u => u.Id == existingUser.Id);
         updatedUser.Should().BeEquivalentTo(existingUser);
@@ -53,14 +47,11 @@ public class UserCommandRepositoryTests(TestInitializer testInitializer) : IAsyn
     [Fact]
     public async Task Can_DeleteUserAsync()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var existingUser = await seeder.SeedUser();
 
-        // Act
         await Sut.DeleteAsync(existingUser.Id);
 
-        // Assert
         await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var deletedUser = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == existingUser.Id);
         deletedUser.Should().BeNull();

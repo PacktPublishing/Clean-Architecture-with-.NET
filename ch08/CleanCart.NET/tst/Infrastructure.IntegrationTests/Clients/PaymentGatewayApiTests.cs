@@ -23,13 +23,10 @@ public class PaymentGatewayApiTests
     [Fact]
     public async Task ProcessPaymentAsync_ReturnsPaymentResult()
     {
-        // Arrange
         var paymentRequest = new PaymentRequest();
 
-        // Act
         var result = await _sut.ProcessPaymentAsync(paymentRequest);
 
-        // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Content);
         Assert.NotEmpty(result.Content);
@@ -39,13 +36,10 @@ public class PaymentGatewayApiTests
     [Fact]
     public async Task GetPaymentStatusAsync_ReturnsPaymentStatus()
     {
-        // Arrange
         var paymentId = "1";
 
-        // Act
         var result = await _sut.GetPaymentStatusAsync(paymentId);
 
-        // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Content);
         Assert.NotEmpty(result.Content);

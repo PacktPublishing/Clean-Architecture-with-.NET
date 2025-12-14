@@ -17,7 +17,7 @@ public class UpdateProductInventoryCommandHandler(
 
         if (user == null)
         {
-            throw new ArgumentException($"User '{command.UserId}' does not exist.");
+            throw new UnauthorizedAccessException("User not found.");
         }
 
         if (!user.Roles.Contains(UserRole.Administrator))
@@ -26,12 +26,10 @@ public class UpdateProductInventoryCommandHandler(
         }
 
         Product? product = await productQueryRepository.GetByIdAsync(command.ProductId, cancellationToken);
-        
-        if  (product == null)
-        {
-            throw new ArgumentException($"Product '{command.ProductId}' does not exist.");
-        }
-        
+
+        if (product is null)
+            return; // Log or handle as needed
+
         product.UpdateStockLevel(command.StockLevel);
         await productCommandRepository.UpdateAsync(product, cancellationToken);
     }

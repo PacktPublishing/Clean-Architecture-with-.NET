@@ -11,23 +11,23 @@ public class AccessCustomerDataUseCase(
     IUserRepository userRepository)
     : IAccessCustomerDataUseCase
 {
-    public async Task<ShoppingCart?> GetCustomerCartAsync(Guid authorizationUserId, Guid customerUserId)
+    public async Task<ShoppingCart?> GetCustomerCartAsync(Guid requestingUserId, Guid targetUserId)
     {
-        await AuthorizedUserAsync(authorizationUserId);
+        await AuthorizeUserAsync(requestingUserId);
 
         // Retrieve the customer's shopping cart by customer ID
-        return await shoppingCartRepository.GetByUserIdAsync(customerUserId);
+        return await shoppingCartRepository.GetByUserIdAsync(targetUserId);
     }
 
-    public async Task<IEnumerable<Order>> GetOrderHistoryAsync(Guid authorizationUserId, Guid customerUserId)
+    public async Task<IEnumerable<Order>> GetOrderHistoryAsync(Guid requestingUserId, Guid targetUserId)
     {
-        await AuthorizedUserAsync(authorizationUserId);
+        await AuthorizeUserAsync(requestingUserId);
 
         // Retrieve the order history for the customer by user ID
-        return await orderRepository.GetOrdersByUserIdAsync(customerUserId);
+        return await orderRepository.GetOrdersByUserIdAsync(targetUserId);
     }
 
-    private async Task AuthorizedUserAsync(Guid userId)
+    private async Task AuthorizeUserAsync(Guid userId)
     {
         var user = await userRepository.GetByIdAsync(userId);
 

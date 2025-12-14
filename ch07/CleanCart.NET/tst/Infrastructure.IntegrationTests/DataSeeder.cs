@@ -21,7 +21,7 @@ public class DataSeeder(IDbContextFactory<CoreDbContext> dbContextFactory, IMapp
     public async Task<Product> SeedProduct()
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync();
-        var product = new Product(Guid.NewGuid(), "Test Product", 20.99M, 100);
+        var product = new Product("Test Product", 20.99M, 100);
         var sqlProduct = mapper.Map<Infrastructure.Persistence.Entities.Product>(product);
         await dbContext.Products.AddAsync(sqlProduct);
         await dbContext.SaveChangesAsync();
@@ -50,7 +50,10 @@ public class DataSeeder(IDbContextFactory<CoreDbContext> dbContextFactory, IMapp
             new(product.Id, product.Name, product.Price, 1)
         };
         var shoppingCart = new ShoppingCart(user.Id);
-        shoppingCart.Items.AddRange(shoppingCartItems);
+        foreach (var cartItem in shoppingCartItems)
+        {
+            shoppingCart.AddItem(cartItem.ProductId, cartItem.ProductName, cartItem.ProductPrice, cartItem.Quantity);
+        }
         var sqlShoppingCart = mapper.Map<Infrastructure.Persistence.Entities.ShoppingCart>(shoppingCart);
         await dbContext.ShoppingCarts.AddAsync(sqlShoppingCart);
         await dbContext.SaveChangesAsync();

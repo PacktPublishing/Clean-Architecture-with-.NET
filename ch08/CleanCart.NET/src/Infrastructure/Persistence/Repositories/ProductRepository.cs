@@ -8,7 +8,7 @@ namespace Infrastructure.Persistence.Repositories;
 
 public class ProductRepository(IDbContextFactory<CoreDbContext> contextFactory, IMapper mapper) : RepositoryBase<CoreDbContext>(contextFactory, mapper), IProductRepository
 {
-    public async Task<Product> GetByIdAsync(Guid id)
+    public async Task<Product?> GetByIdAsync(Guid id)
     {
         var dbContext = await ContextFactory.CreateDbContextAsync();
         var sqlProduct = await dbContext.Products.FirstOrDefaultAsync(p => p.Id == id);

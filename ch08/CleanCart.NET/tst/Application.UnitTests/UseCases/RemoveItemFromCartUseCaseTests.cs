@@ -1,7 +1,7 @@
 ﻿using Application.Interfaces.Data;
 using Application.UseCases.RemoveItemFromCart;
 using Domain.Entities;
-using Moq;
+using NSubstitute;
 
 namespace Application.UnitTests.UseCases;
 
@@ -10,28 +10,24 @@ public class RemoveItemFromCartUseCaseTests
     [Fact]
     public async Task RemoveItemFromCartAsync_ValidInput_RemovesItemFromCart()
     {
-        // Arrange
         var userId = Guid.NewGuid();
-        var productId = Guid.NewGuid();
         int removeQuantity = 2;
         int initialQuantity = 5;
         int expectedQuantity = initialQuantity - removeQuantity;
 
         var shoppingCart = new ShoppingCart(userId);
-        var product = new Product(productId, "Product", 10.0m, 5);
-        shoppingCart.AddItem(product, initialQuantity);
+        var product = new Product("Product", 10.0m, 5);
+        shoppingCart.AddItem(product.Id, product.Name, product.Price, initialQuantity);
 
-        var mockRepository = new Mock<IShoppingCartRepository>();
-        mockRepository.Setup(repo => repo.GetByUserIdAsync(userId)).ReturnsAsync(shoppingCart);
+        var mockRepository = Substitute.For<IShoppingCartRepository>();
+        mockRepository.GetByUserIdAsync(userId).Returns(shoppingCart);
 
-        var useCase = new RemoveItemFromCartUseCase(mockRepository.Object);
-        var input = new RemoveItemFromCartInput(userId, productId, removeQuantity);
+        var useCase = new RemoveItemFromCartUseCase(mockRepository);
+        var input = new RemoveItemFromCartInput(userId, product.Id, removeQuantity);
 
-        // Act
         await useCase.RemoveItemFromCartAsync(input);
 
-        // Assert
-        var item = shoppingCart.Items.SingleOrDefault(i => i.ProductId == productId);
+        var item = shoppingCart.Items.SingleOrDefault(i => i.ProductId == product.Id);
         Assert.NotNull(item);
         Assert.Equal(expectedQuantity, item.Quantity);
     }

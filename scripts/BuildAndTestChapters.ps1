@@ -1,5 +1,5 @@
 param(
-    [string]$Chapter = "3"  # Optional chapter filter (e.g., "ch3" or "3"
+    [string]$Chapter = ""  # Optional chapter filter (e.g., "ch03" or "03"
 )
 
 # Disable built-in PowerShell progress indicators (prevents deletion spam)

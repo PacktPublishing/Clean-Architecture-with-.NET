@@ -12,16 +12,22 @@ public class AddItemToCartCommandHandler(
 {
     public async Task Handle(AddItemToCartCommand command, CancellationToken cancellationToken)
     {
-        ShoppingCart cart = await shoppingCartQueryRepository.GetByUserIdAsync(command.UserId) ?? new ShoppingCart(command.UserId);
         Product? product = await productQueryRepository.GetByIdAsync(command.ProductId, cancellationToken);
 
         if (product is null)
-        {
-            throw new ArgumentException($"Product '{command.ProductId}' does not exist.");
-        }
-        
-        cart.AddItem(product, command.Quantity);
+            return; // Alternatively, throw an exception or handle the error as needed
 
-        await shoppingCartCommandRepository.SaveAsync(cart);
+        if (product.StockLevel < command.Quantity)
+        {
+            throw new InvalidOperationException(
+                $"Not enough stock for '{product.Name}'. Requested: {command.Quantity}, Available: {product.StockLevel}");
+        }
+
+        var shoppingCart = await shoppingCartQueryRepository.GetByUserIdAsync(command.UserId)
+                           ?? new ShoppingCart(command.UserId);
+
+        shoppingCart.AddItem(product.Id, product.Name, product.Price, command.Quantity);
+
+        await shoppingCartCommandRepository.SaveAsync(shoppingCart);
     }
 }

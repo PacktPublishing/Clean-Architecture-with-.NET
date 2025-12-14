@@ -66,7 +66,7 @@ public partial class Checkout
             {
                 var command = Mapper.Map<ProcessPaymentCommand>(_viewModel);
                 command.UserId = _user.Id;
-                command.Items = _shoppingCart!.Items;
+                command.Items = _shoppingCart!.Items.ToList();
                 order = await Mediator.Send(command);
                 ShoppingCartState.NotifyCartChanged();
             }

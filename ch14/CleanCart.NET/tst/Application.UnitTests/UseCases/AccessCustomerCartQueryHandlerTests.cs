@@ -2,7 +2,7 @@
 using Application.Operations.UseCases.AccessCustomerData;
 using Domain.Entities;
 using Domain.Enums;
-using Moq;
+using NSubstitute;
 
 namespace Application.UnitTests.UseCases;
 
@@ -13,26 +13,23 @@ public class AccessCustomerCartQueryHandlerTests
     [InlineData(UserRole.Administrator)]
     public async Task GetCustomerCart_ValidInput_IsAuthorized_ReturnsCustomerCart(UserRole role)
     {
-        // Arrange
         var authorizationUserId = Guid.NewGuid();
         var customerUserId = Guid.NewGuid();
         var query = new AccessCustomerCartQuery(authorizationUserId, customerUserId);
         var roles = new List<UserRole> { role };
 
-        var mockUserRepository = new Mock<IUserQueryRepository>();
-        mockUserRepository.Setup(repo => repo.GetByIdAsync(authorizationUserId, CancellationToken.None))
-            .ReturnsAsync(new User("jdoe", "jdoe@example.com", "John Does", roles));
+        var mockUserRepository = Substitute.For<IUserQueryRepository>();
+        mockUserRepository.GetByIdAsync(authorizationUserId, CancellationToken.None)
+            .Returns(new User("jdoe", "jdoe@example.com", "John Does", roles));
 
-        var mockShoppingCartRepository = new Mock<IShoppingCartQueryRepository>();
-        mockShoppingCartRepository.Setup(repo => repo.GetByUserIdAsync(customerUserId))
-            .ReturnsAsync(new ShoppingCart(customerUserId));
+        var mockShoppingCartRepository = Substitute.For<IShoppingCartQueryRepository>();
+        mockShoppingCartRepository.GetByUserIdAsync(customerUserId)
+            .Returns(new ShoppingCart(customerUserId));
 
-        var useCase = new AccessCustomerCartQueryHandler(mockShoppingCartRepository.Object, mockUserRepository.Object);
+        var useCase = new AccessCustomerCartQueryHandler(mockShoppingCartRepository, mockUserRepository);
 
-        // Act
         var customerCart = await useCase.Handle(query, CancellationToken.None);
 
-        // Assert
         Assert.NotNull(customerCart);
     }
 
@@ -41,26 +38,23 @@ public class AccessCustomerCartQueryHandlerTests
     [InlineData(UserRole.Administrator)]
     public async Task GetOrderHistory_ValidInput_IsAuthorized_ReturnsCustomerOrderHistory(UserRole role)
     {
-        // Arrange
         var authorizationUserId = Guid.NewGuid();
         var customerUserId = Guid.NewGuid();
         var query = new AccessCustomerOrderHistoryQuery(authorizationUserId, customerUserId);
         var roles = new List<UserRole> { role };
 
-        var mockUserRepository = new Mock<IUserQueryRepository>();
-        mockUserRepository.Setup(repo => repo.GetByIdAsync(authorizationUserId, CancellationToken.None))
-            .ReturnsAsync(new User("jdoe", "jdoe@example.com", "John Does", roles));
+        var mockUserRepository = Substitute.For<IUserQueryRepository>();
+        mockUserRepository.GetByIdAsync(authorizationUserId, CancellationToken.None)
+            .Returns(new User("jdoe", "jdoe@example.com", "John Does", roles));
 
-        var mockOrderRepository = new Mock<IOrderQueryRepository>();
-        mockOrderRepository.Setup(repo => repo.GetOrdersByUserIdAsync(customerUserId, CancellationToken.None))
-            .ReturnsAsync(new List<Order>());
+        var mockOrderRepository = Substitute.For<IOrderQueryRepository>();
+        mockOrderRepository.GetOrdersByUserIdAsync(customerUserId, CancellationToken.None)
+            .Returns(new List<Order>());
 
-        var useCase = new AccessCustomerOrderHistoryQueryHandler(mockOrderRepository.Object, mockUserRepository.Object);
+        var useCase = new AccessCustomerOrderHistoryQueryHandler(mockOrderRepository, mockUserRepository);
 
-        // Act
         var orderHistory = await useCase.Handle(query, CancellationToken.None);
 
-        // Assert
         Assert.NotNull(orderHistory);
         Assert.Empty(orderHistory);
     }
@@ -68,36 +62,32 @@ public class AccessCustomerCartQueryHandlerTests
     [Fact]
     public async Task GetCustomerCart_UnauthorizedUser_ThrowsUnauthorizedAccessException()
     {
-        // Arrange
         var authorizationUserId = Guid.NewGuid();
         var customerUserId = Guid.NewGuid();
         var query = new AccessCustomerCartQuery(authorizationUserId, customerUserId);
 
-        var mockUserRepository = new Mock<IUserQueryRepository>();
-        mockUserRepository.Setup(repo => repo.GetByIdAsync(authorizationUserId, CancellationToken.None))
-            .ReturnsAsync(new User("RegularUser", "user@example.com", "Regular User", new List<UserRole>()));
+        var mockUserRepository = Substitute.For<IUserQueryRepository>();
+        mockUserRepository.GetByIdAsync(authorizationUserId, CancellationToken.None)
+            .Returns(new User("RegularUser", "user@example.com", "Regular User", new List<UserRole>()));
 
-        var useCase = new AccessCustomerCartQueryHandler(Mock.Of<IShoppingCartQueryRepository>(), mockUserRepository.Object);
+        var useCase = new AccessCustomerCartQueryHandler(Substitute.For<IShoppingCartQueryRepository>(), mockUserRepository);
 
-        // Act & Assert
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => useCase.Handle(query, CancellationToken.None));
     }
 
     [Fact]
     public async Task GetOrderHistory_UnauthorizedUser_ThrowsUnauthorizedAccessException()
     {
-        // Arrange
         var authorizationUserId = Guid.NewGuid();
         var customerUserId = Guid.NewGuid();
         var query = new AccessCustomerOrderHistoryQuery(authorizationUserId, customerUserId);
 
-        var mockUserRepository = new Mock<IUserQueryRepository>();
-        mockUserRepository.Setup(repo => repo.GetByIdAsync(authorizationUserId, CancellationToken.None))
-            .ReturnsAsync(new User("RegularUser", "user@example.com", "Regular User", new List<UserRole>()));
+        var mockUserRepository = Substitute.For<IUserQueryRepository>();
+        mockUserRepository.GetByIdAsync(authorizationUserId, CancellationToken.None)
+            .Returns(new User("RegularUser", "user@example.com", "Regular User", new List<UserRole>()));
 
-        var useCase = new AccessCustomerOrderHistoryQueryHandler(Mock.Of<IOrderQueryRepository>(), mockUserRepository.Object);
+        var useCase = new AccessCustomerOrderHistoryQueryHandler(Substitute.For<IOrderQueryRepository>(), mockUserRepository);
 
-        // Act & Assert
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => useCase.Handle(query, CancellationToken.None));
     }
 }

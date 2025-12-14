@@ -1,6 +1,6 @@
 ﻿namespace Application.UseCases.CalculateCartTotal;
 
-public class CalculateCartTotalInput
+public class CalculateCartTotalInput(Guid userId)
 {
-    public Guid UserId { get; set; }
+    public Guid UserId { get; } = userId;
 }

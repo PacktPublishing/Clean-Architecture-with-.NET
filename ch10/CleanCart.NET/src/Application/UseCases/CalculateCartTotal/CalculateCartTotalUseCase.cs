@@ -22,12 +22,12 @@ public class CalculateCartTotalUseCase(IShoppingCartRepository shoppingCartRepos
         return total;
     }
 
-    private decimal CalculateSubtotal(ShoppingCart shoppingCart)
+    private static decimal CalculateSubtotal(ShoppingCart? shoppingCart)
     {
-        return shoppingCart.Items.Sum(item => item.ProductPrice * item.Quantity);
+        return shoppingCart?.Items.Sum(item => item.ProductPrice * item.Quantity) ?? 0;
     }
 
-    private decimal CalculateTaxes(decimal subtotal)
+    private static decimal CalculateTaxes(decimal subtotal)
     {
         // Implement tax calculation logic here based on business rules.
         // For simplicity, we assume a flat tax rate in this example.

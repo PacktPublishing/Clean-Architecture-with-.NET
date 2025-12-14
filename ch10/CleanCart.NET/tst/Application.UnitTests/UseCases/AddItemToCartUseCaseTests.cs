@@ -1,36 +1,77 @@
 using Application.Interfaces.Data;
 using Application.UseCases.AddItemToCart;
 using Domain.Entities;
-using Moq;
+using NSubstitute;
 
 namespace Application.UnitTests.UseCases;
 
 public class AddItemToCartUseCaseTests
 {
     [Fact]
-    public void AddItemToCartAsync_ValidInput_AddsItemToCart()
+    public async Task AddItemToCartAsync_ValidInput_AddsItemToCart()
     {
-        // Arrange
-        var shoppingCartRepository = new Mock<IShoppingCartRepository>();
-        var productRepository = new Mock<IProductRepository>();
+        var shoppingCartRepository = Substitute.For<IShoppingCartRepository>();
+        var productRepository = Substitute.For<IProductRepository>();
         var userId = Guid.NewGuid();
 
         var shoppingCart = new ShoppingCart(userId);
-        var product = new Product(Guid.NewGuid(), "Test Product", 10.00m, 5, "");
+        var product = new Product("Test Product", 10.00m, 5, "img.png");
 
-        shoppingCartRepository.Setup(r => r.GetByUserIdAsync(userId))
-            .ReturnsAsync(shoppingCart);
-        productRepository.Setup(r => r.GetByIdAsync(product.Id))
-            .ReturnsAsync(product);
+        shoppingCartRepository.GetByUserIdAsync(userId).Returns(shoppingCart);
+        productRepository.GetByIdAsync(product.Id).Returns(product);
 
-        var useCase = new AddItemToCartUseCase(shoppingCartRepository.Object, productRepository.Object);
+        var useCase = new AddItemToCartUseCase(shoppingCartRepository, productRepository);
 
-        // Act
         _ = useCase.AddItemToCartAsync(new AddItemToCartInput(userId, product.Id, 1));
 
-        // Assert
-        productRepository.Verify(r => r.GetByIdAsync(product.Id), Times.Once);
-        shoppingCartRepository.Verify(r => r.GetByUserIdAsync(userId), Times.Once);
-        shoppingCartRepository.Verify(r => r.SaveAsync(shoppingCart), Times.Once);
+        await productRepository.Received(1).GetByIdAsync(product.Id);
+        await shoppingCartRepository.Received(1).GetByUserIdAsync(userId);
+        await shoppingCartRepository.Received(1).SaveAsync(shoppingCart);
+    }
+
+    [Fact]
+    public async Task AddItemToCartAsync_ShouldCreateNewCart_WhenCartDoesNotExist()
+    {
+        var shoppingCartRepository = Substitute.For<IShoppingCartRepository>();
+        var productRepository = Substitute.For<IProductRepository>();
+
+        var userId = Guid.NewGuid();
+        var product = new Product("Test Product", 10.00m, 2, "img.png");
+
+        // Simulate that no cart exists yet
+        shoppingCartRepository.GetByUserIdAsync(userId).Returns((ShoppingCart?)null);
+        productRepository.GetByIdAsync(product.Id).Returns(product);
+
+        var useCase = new AddItemToCartUseCase(shoppingCartRepository, productRepository);
+
+        await useCase.AddItemToCartAsync(new AddItemToCartInput(userId, product.Id, 2));
+
+        await shoppingCartRepository.Received(1).SaveAsync(Arg.Is<ShoppingCart>(
+            cart => cart.UserId == userId &&
+                    cart.Items.Any(i => i.ProductId == product.Id && i.Quantity == 2)
+        ));
+    }
+
+    [Fact]
+    public async Task AddItemToCartAsync_ShouldThrow_WhenRequestedQuantityExceedsStock()
+    {
+        var shoppingCartRepository = Substitute.For<IShoppingCartRepository>();
+        var productRepository = Substitute.For<IProductRepository>();
+        var userId = Guid.NewGuid();
+
+        var product = new Product("Limited Edition Item", 25.00m, stockLevel: 1, "img.png"); // Only 1 in stock
+
+        productRepository.GetByIdAsync(product.Id).Returns(product);
+        shoppingCartRepository.GetByUserIdAsync(userId).Returns(new ShoppingCart(userId));
+
+        var useCase = new AddItemToCartUseCase(shoppingCartRepository, productRepository);
+
+        var input = new AddItemToCartInput(userId, product.Id, quantity: 2); // Requesting more than available
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => useCase.AddItemToCartAsync(input));
+
+        Assert.Contains("Not enough stock", exception.Message);
+
+        await shoppingCartRepository.DidNotReceive().SaveAsync(Arg.Any<ShoppingCart>());
     }
 }

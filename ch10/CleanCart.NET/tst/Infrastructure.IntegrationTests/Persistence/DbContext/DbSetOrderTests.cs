@@ -14,7 +14,6 @@ public class DbSetOrderTests : IAsyncLifetime
 
     public DbSetOrderTests(TestInitializer testInitializer)
     {
-        // Arrange
         using CoreDbContext dbContext = testInitializer.DbContextFactory.CreateDbContext();
 
         string? entityKey = typeof(Order).FullName;

@@ -18,16 +18,13 @@ public class ShoppingCartQueryRepositoryTest(TestInitializer testInitializer) : 
     [Fact]
     public async Task Can_GetByUserIdAsync()
     {
-        // Arrange
         var seeder = new DataSeeder(_dbContextFactory, _mapper);
         var user = await seeder.SeedUser();
         var product = await seeder.SeedProduct();
         var expectedShoppingCart = await seeder.SeedShoppingCart(user, product);
 
-        // Act
         var returnedShoppingCart = await Sut.GetByUserIdAsync(user.Id);
 
-        // Assert
         returnedShoppingCart.Should().BeEquivalentTo(expectedShoppingCart);
     }
     public Task InitializeAsync() => Task.CompletedTask;

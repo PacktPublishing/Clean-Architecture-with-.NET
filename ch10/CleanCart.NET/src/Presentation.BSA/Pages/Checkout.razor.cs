@@ -71,7 +71,7 @@ public partial class Checkout
             {
                 var paymentInput = Mapper.Map<ProcessPaymentInput>(_viewModel);
                 paymentInput.UserId = _user.Id;
-                paymentInput.Items = _shoppingCart!.Items;
+                paymentInput.Items = _shoppingCart!.Items.ToList();
                 order = await ProcessPaymentUseCase.ProcessPaymentAsync(paymentInput);
                 ShoppingCartState.NotifyCartChanged();
             }

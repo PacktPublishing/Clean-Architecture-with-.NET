@@ -3,12 +3,24 @@ using EntityAxis.Abstractions;
 
 namespace Domain.Entities;
 
-public class Order(Guid userId, List<OrderItem> items, decimal totalAmount) : IEntityId<Guid>
+public class Order : IEntityId<Guid>
 {
-    public Guid Id { get; private set; } = Guid.NewGuid();
-    public Guid UserId { get; private set; } = userId;
-    public List<OrderItem> Items { get; private set; } = items;
-    public decimal TotalAmount { get; private set; } = totalAmount;
-    public DateTime CreatedOn { get; private set; } = DateTime.UtcNow;
-    public OrderStatus Status { get; set; } = OrderStatus.Pending; // Initial status
+    private readonly List<OrderItem> _items = new();
+
+    public Guid Id { get; private set; }
+    public Guid UserId { get; private set; }
+    public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
+    public decimal TotalAmount { get; private set; }
+    public DateTime CreatedOn { get; private set; }
+    public OrderStatus Status { get; set; }
+
+    public Order(Guid userId, IEnumerable<OrderItem> items, decimal totalAmount)
+    {
+        Id = Guid.NewGuid();
+        UserId = userId;
+        _items.AddRange(items);
+        TotalAmount = totalAmount;
+        CreatedOn = DateTime.UtcNow;
+        Status = OrderStatus.Pending; // Initial status
+    }
 }
