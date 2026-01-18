@@ -9,12 +9,12 @@ using Presentation.BSA.Models.ViewModels;
 
 namespace Presentation.UnitTests.Mapping;
 
-public class MappingTests
+public class PresentationMappingTests
 {
     protected readonly IMapper Mapper;
     protected readonly IFixture AutoFixture;
 
-    public MappingTests()
+    public PresentationMappingTests()
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder().Build();

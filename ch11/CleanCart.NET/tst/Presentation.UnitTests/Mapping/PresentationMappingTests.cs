@@ -8,12 +8,12 @@ using Presentation.BSA.Models.ViewModels;
 
 namespace Presentation.UnitTests.Mapping;
 
-public class MappingTests
+public class PresentationMappingTests
 {
     protected readonly IMapper Mapper;
     protected readonly IFixture AutoFixture;
 
-    public MappingTests()
+    public PresentationMappingTests()
     {
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         var services = new ServiceCollection();

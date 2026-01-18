@@ -29,7 +29,7 @@ public class DbSetUserTests : IAsyncLifetime
     }
 
     [Theory]
-    [InlineData(nameof(User.Username), 50)]
+    [InlineData(nameof(User.Username), 50, null, true)]
     [InlineData(nameof(User.Email), 320)]
     [InlineData(nameof(User.FullName), 100)]
     [InlineData(nameof(User.Roles), 4000)]

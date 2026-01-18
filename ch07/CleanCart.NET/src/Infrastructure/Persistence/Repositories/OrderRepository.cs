@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence.Repositories;
 
-public class OrderRepository(IDbContextFactory<CoreDbContext> contextFactory, IMapper mapper) : RepositoryBase<CoreDbContext>(contextFactory, mapper), IOrderRepository
+public class OrderRepository(IDbContextFactory<CoreDbContext> contextFactory, IMapper mapper)
+    : RepositoryBase<CoreDbContext>(contextFactory, mapper), IOrderRepository
 {
     public async Task<Order> CreateOrderAsync(Order order)
     {
@@ -16,7 +17,7 @@ public class OrderRepository(IDbContextFactory<CoreDbContext> contextFactory, IM
         await dbContext.Orders.AddAsync(sqlOrder);
         await dbContext.SaveChangesAsync();
 
-        return order;
+        return Mapper.Map<Order>(sqlOrder);
     }
 
     public async Task UpdateOrderAsync(Order order)

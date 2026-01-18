@@ -1,4 +1,6 @@
-﻿namespace Infrastructure.Persistence.Entities;
+﻿using Domain.Enums;
+
+namespace Infrastructure.Persistence.Entities;
 
 public class Order
 {
@@ -7,6 +9,7 @@ public class Order
     public List<OrderItem> Items { get; set; } = new();
     public decimal TotalAmount { get; set; }
     public DateTime CreatedOn { get; set; }
-    public string Status { get; set; } = string.Empty;
+    public OrderStatus Status { get; set; }
+
     public User? NavUser { get; set; }
 }

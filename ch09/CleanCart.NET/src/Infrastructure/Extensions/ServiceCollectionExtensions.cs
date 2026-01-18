@@ -1,6 +1,8 @@
 ﻿using Application.Interfaces.Data;
 using Application.Interfaces.Services.Payment;
 using Application.Interfaces.UseCases;
+using Application.Mapping;
+using AutoMapper;
 using Infrastructure.Clients;
 using Infrastructure.Configuration;
 using Infrastructure.Mapping;
@@ -13,8 +15,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Refit;
 using System.Reflection;
-using Application.Mapping;
-using AutoMapper;
 
 namespace Infrastructure.Extensions;
 
@@ -39,21 +39,11 @@ public static class ServiceCollectionExtensions
         // Services
         services.AddScoped<IPaymentGateway, PaymentGateway>();
 
-        // AutoMapper
+        // Add AutoMapper and Profiles
+        services.AddAutoMapper();
+        // Profiles are registered in the DI Container to allow the Presentation Layer to register its own profiles without needing to know about the Infrastructure Layer's profiles.
         services.AddSingleton<Profile, ApplicationMappingProfile>();
         services.AddSingleton<Profile, InfrastructureMappingProfile>();
-        services.AddSingleton(serviceProvider =>
-        {
-            var configurationExpression = new MapperConfigurationExpression();
-            var profiles = serviceProvider.GetServices<Profile>();
-            foreach (Profile profile in profiles)
-            {
-                configurationExpression.AddProfile(profile);
-            }
-            configurationExpression.ConstructServicesUsing(serviceProvider.GetService);
-            var mapperConfiguration = new MapperConfiguration(configurationExpression);
-            return mapperConfiguration.CreateMapper();
-        });
 
         // HttpClients
         services.AddPaymentGatewayApi();
@@ -113,6 +103,22 @@ public static class ServiceCollectionExtensions
         );
 
         return services;
+    }
+
+    public static void AddAutoMapper(this IServiceCollection services)
+    {
+        services.AddSingleton(serviceProvider =>
+        {
+            var configurationExpression = new MapperConfigurationExpression();
+            var profiles = serviceProvider.GetServices<Profile>();
+            foreach (Profile profile in profiles)
+            {
+                configurationExpression.AddProfile(profile);
+            }
+            configurationExpression.ConstructServicesUsing(serviceProvider.GetService);
+            var mapperConfiguration = new MapperConfiguration(configurationExpression);
+            return mapperConfiguration.CreateMapper();
+        });
     }
 
     private static IServiceCollection AddPaymentGatewayApi(this IServiceCollection services)

@@ -15,9 +15,9 @@ internal class OrderConfiguration : IEntityTypeConfiguration<Order>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(order => order.Id).ValueGeneratedNever();
-        builder.Property(order => order.TotalAmount).IsRequired().HasColumnType("decimal(18,2)");
+        builder.Property(order => order.TotalAmount).IsRequired();
         builder.Property(order => order.CreatedOn).IsRequired();
-        builder.Property(order => order.Status).IsRequired().HasMaxLength(20);
+        builder.Property(order => order.Status).IsRequired().HasMaxLength(20).HasConversion<string>();
 
         // OrderItem owned entity configuration
         builder.OwnsMany(order => order.Items, orderItemBuilder =>
@@ -30,7 +30,7 @@ internal class OrderConfiguration : IEntityTypeConfiguration<Order>
 
             orderItemBuilder.Property(orderItem => orderItem.Quantity).IsRequired();
             orderItemBuilder.Property(orderItem => orderItem.ProductName).IsRequired().HasMaxLength(255);
-            orderItemBuilder.Property(orderItem => orderItem.ProductPrice).IsRequired().HasColumnType("decimal(18,2)");
+            orderItemBuilder.Property(orderItem => orderItem.ProductPrice).IsRequired();
         });
     }
 }

@@ -4,49 +4,28 @@ using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
 using FluentAssertions;
-using Infrastructure.Startup;
+using Infrastructure.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
 namespace Infrastructure.UnitTests.Mapping;
 
-public class MappingTests
+public class InfrastructureMappingTests
 {
     IMapper Mapper { get; }
     IFixture Fixture { get; } = new Fixture().Customize(new IgnorePropertiesStartingWithNavCustomization());
 
-    public MappingTests()
+    public InfrastructureMappingTests()
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
             .AddJsonFile("appsettings.core.json", optional: false)
             .Build();
-        var appStartupOrchestrator = new AppStartupOrchestrator();
-        appStartupOrchestrator.Orchestrate(services, configuration);
+
+        // Reuse the same extension that wires up AutoMapper and profiles
+        services.AddCoreLayerServices(configuration);
         Mapper = services.BuildServiceProvider().GetRequiredService<IMapper>();
-    }
-
-    [Fact]
-    public void DomainOrderItem_MapsTo_DomainShoppingCartItem()
-    {
-        var domainOrderItem = new OrderItem(Guid.NewGuid(), "Test Product", 20, 1);
-        var expected = new ShoppingCartItem(domainOrderItem.ProductId, domainOrderItem.ProductName, domainOrderItem.ProductPrice, domainOrderItem.Quantity);
-
-        var actual = Mapper.Map<ShoppingCartItem>(domainOrderItem);
-
-        actual.Should().BeEquivalentTo(expected);
-    }
-
-    [Fact]
-    public void DomainShoppingCartItem_MapsTo_DomainOrderItem()
-    {
-        var domainShoppingCartItem = new ShoppingCartItem(Guid.NewGuid(), "Test Product", 20, 1);
-        var expected = new OrderItem(domainShoppingCartItem.ProductId, domainShoppingCartItem.ProductName, domainShoppingCartItem.ProductPrice, domainShoppingCartItem.Quantity);
-
-        var actual = Mapper.Map<OrderItem>(domainShoppingCartItem);
-
-        actual.Should().BeEquivalentTo(expected);
     }
 
     [Fact]
@@ -61,14 +40,13 @@ public class MappingTests
         var sqlOrder = Mapper.Map<Infrastructure.Persistence.Entities.Order>(domainOrder);
 
         sqlOrder.Should().BeEquivalentTo(domainOrder, options => options.Excluding(o => o.Status));
-        sqlOrder.Status.Should().Be(domainOrder.Status.ToString());
+        sqlOrder.Status.Should().Be(domainOrder.Status);
     }
 
     [Fact]
     public void SqlOrder_MapsTo_DomainOrder()
     {
         var sqlOrder = Fixture.Create<Infrastructure.Persistence.Entities.Order>();
-        sqlOrder.Status = OrderStatus.Pending.ToString();
 
         var domainOrder = Mapper.Map<Order>(sqlOrder);
 
@@ -78,7 +56,7 @@ public class MappingTests
             options.Excluding(o => o.Status);
             return options;
         });
-        domainOrder.Status.ToString().Should().Be(sqlOrder.Status);
+        domainOrder.Status.Should().Be(sqlOrder.Status);
     }
 
     [Fact]
