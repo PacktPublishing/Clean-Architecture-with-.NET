@@ -1,21 +1,28 @@
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Hosting;
-using Presentation.BSA;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Presentation.IntegrationTests;
 
-public class StartupTests
+public class StartupTests : IClassFixture<WebApplicationFactory<Program>>
 {
+    private readonly WebApplicationFactory<Program> _factory;
+
+    public StartupTests(WebApplicationFactory<Program> factory)
+    {
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Development");
+        });
+    }
+
     [Fact]
-    public void Application_StartsSuccessfully()
+    public async Task Application_StartsSuccessfully()
     {
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
-        var builder = Program.CreateHostBuilder(Array.Empty<string>());
+        using var client = _factory.CreateClient();
 
-        var host = builder.Build();
-        host.Start();
+        var response = await client.GetAsync("/");
 
-        using var testServer = new TestServer(host.Services);
-        Assert.NotNull(testServer);
+        Assert.True(response.IsSuccessStatusCode);
     }
 }

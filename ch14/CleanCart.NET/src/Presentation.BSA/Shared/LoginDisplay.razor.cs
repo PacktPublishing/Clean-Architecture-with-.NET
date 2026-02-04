@@ -61,6 +61,7 @@ public partial class LoginDisplay
     {
         if (!string.IsNullOrEmpty(Email))
         {
+            // TODO: Migrate this business logic to the Application layer
             var query = new GetUserByUsernameQuery(Email);
             var user = await Mediator.Send(query);
             if (user == null)

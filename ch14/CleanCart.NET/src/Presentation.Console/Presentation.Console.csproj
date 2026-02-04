@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+    <ProjectReference Include="..\Presentation.Common\Presentation.Common.csproj" />
   </ItemGroup>
 
 </Project>

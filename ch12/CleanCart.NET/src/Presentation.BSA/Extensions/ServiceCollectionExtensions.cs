@@ -13,7 +13,7 @@ namespace Presentation.BSA.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddAzureB2C(this IServiceCollection services, IConfiguration configuration)
+    public static void AddAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         services
             .AddAuthentication(options =>

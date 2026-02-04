@@ -57,6 +57,8 @@ public partial class LoginDisplay
     {
         if (!string.IsNullOrEmpty(Email))
         {
+            // This represents business logic in the UI
+            // In a later chapter, we will move this logic to the Application layer
             var user = await UserRepository.GetByUsernameAsync(Email);
             if (user == null)
             {

@@ -18,7 +18,7 @@ public static class ConfigurationBuilderExtensions
 
         if (useAzureKeyVault)
         {
-            AddAzureKeyVault(configurationBuilder, environment);
+            configurationBuilder.AddAzureKeyVault(environment);
         }
 
         // Ensure environment variables are added last to override any other configuration
@@ -27,7 +27,7 @@ public static class ConfigurationBuilderExtensions
         return configurationBuilder;
     }
 
-    private static void AddAzureKeyVault(IConfigurationBuilder configurationBuilder, string environment)
+    public static void AddAzureKeyVault(this IConfigurationBuilder configurationBuilder, string environment)
     {
         // Build a temporary configuration to access the Key Vault URL
         IConfiguration configuration = configurationBuilder.Build();

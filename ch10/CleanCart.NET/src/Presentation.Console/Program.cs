@@ -1,114 +1,110 @@
 ﻿using Application.Interfaces.Data;
 using Domain.Entities;
+using Infrastructure.Extensions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Presentation.Console;
 
-namespace Presentation.Console;
+// Explicitly set environment (demo-friendly, optional)
+Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
 
-public static class Program
+// Create the application builder (minimal hosting)
+var builder = Host.CreateApplicationBuilder(args);
+
+// Configure application settings
+string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+string path = Directory.GetParent(assemblyLocation)!.FullName;
+builder.Configuration.SetBasePath(path);
+builder.Configuration.AddCoreLayerConfiguration();
+
+// Register services using your existing composition root
+var serviceComposition = new PresentationServiceComposition(builder.Configuration);
+serviceComposition.ConfigureServices(builder.Services);
+
+// Build the host
+using var host = builder.Build();
+
+// Run the application logic
+DisplayWelcomeMessage();
+await RetrieveAndDisplayShoppingCartAsync(host);
+
+// Graceful shutdown
+Console.WriteLine("Press any key to exit...");
+Console.ReadKey();
+await host.StopAsync();
+
+
+// ------------------------------------------------------------
+// Application logic (unchanged, now top-level helpers)
+// ------------------------------------------------------------
+
+static void DisplayWelcomeMessage()
 {
-    public static async Task Main(string[] args)
+    Console.WriteLine("=============================================");
+    Console.WriteLine("    Welcome to the Shopping Cart Console App! ");
+    Console.WriteLine("=============================================");
+    Console.WriteLine("In this demo, you can enter a User ID to view the items in the shopping cart.");
+    Console.WriteLine();
+}
+
+static async Task RetrieveAndDisplayShoppingCartAsync(IHost host)
+{
+    while (true)
     {
-        // Explicitly set the environment to Development for demo purposes
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+        Console.WriteLine("Please enter a User ID (or press 'X' to exit):");
+        var input = Console.ReadLine();
 
-        // Build the host to initialize services via Startup
-        var builder = CreateHostBuilder(args).Build();
+        if (input?.Equals("X", StringComparison.OrdinalIgnoreCase) == true)
+            return;
 
-        // Display a welcome message
-        DisplayWelcomeMessage();
-
-        // Prompt the user for a valid User ID and retrieve the shopping cart
-        await RetrieveAndDisplayShoppingCartAsync(builder);
-
-        System.Console.WriteLine("Press any key to exit...");
-        System.Console.ReadKey();
-
-        await builder.RunAsync();
-    }
-
-    // Method to build the host
-    public static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args)
-            .ConfigureServices(services =>
-            {
-                var startup = new Startup();
-                startup.ConfigureServices(services);
-            });
-
-    // Display a friendly welcome message to introduce the app
-    private static void DisplayWelcomeMessage()
-    {
-        System.Console.WriteLine("=============================================");
-        System.Console.WriteLine("    Welcome to the Shopping Cart Console App! ");
-        System.Console.WriteLine("=============================================");
-        System.Console.WriteLine("In this demo, you can enter a User ID to view the items in the shopping cart.");
-        System.Console.WriteLine();
-    }
-
-    // Method to handle user input and fetch shopping cart items
-    private static async Task RetrieveAndDisplayShoppingCartAsync(IHost builder)
-    {
-        bool isValidUserId = false;
-        while (!isValidUserId)
+        if (!Guid.TryParse(input, out var userId))
         {
-            // Prompt the user for their User ID
-            System.Console.WriteLine("Please enter a User ID (or press 'X' to exit):");
-
-            var input = System.Console.ReadLine();
-            if (input?.ToUpper() == "X")
-            {
-                return;
-            }
-
-            // Validate the User ID input
-            if (Guid.TryParse(input, out var userId))
-            {
-                // Resolve the IShoppingCartRepository from DI
-                var shoppingCartRepo = builder.Services.GetRequiredService<IShoppingCartRepository>();
-                var shoppingCart = await shoppingCartRepo.GetByUserIdAsync(userId);
-
-                // Display the shopping cart items, or notify if empty
-                DisplayShoppingCart(shoppingCart);
-
-                isValidUserId = true;
-            }
-            else
-            {
-                System.Console.WriteLine("Invalid User ID format. Please try again.");
-            }
-        }
-    }
-
-    // Method to display shopping cart items in a formatted table
-    private static void DisplayShoppingCart(ShoppingCart? shoppingCart)
-    {
-        System.Console.WriteLine();
-        System.Console.WriteLine("Shopping Cart Items:");
-        System.Console.WriteLine("--------------------------------------------------------");
-        System.Console.WriteLine("{0,-40} {1,-20} {2,-10} {3,-10}", "ID", "Product Name", "Price", "Quantity");
-        System.Console.WriteLine("--------------------------------------------------------");
-
-        if (shoppingCart?.Items is not null && shoppingCart.Items.Any())
-        {
-            foreach (var item in shoppingCart.Items)
-            {
-                var truncatedProductName = TruncateString(item.ProductName, 20);
-                System.Console.WriteLine("{0,-40} {1,-20} {2,-10:C} {3,-10}", item.ProductId, truncatedProductName, item.ProductPrice, item.Quantity);
-            }
-        }
-        else
-        {
-            System.Console.WriteLine("Your shopping cart is empty.");
+            Console.WriteLine("Invalid User ID format. Please try again.");
+            continue;
         }
 
-        System.Console.WriteLine("--------------------------------------------------------");
+        var shoppingCartRepo = host.Services.GetRequiredService<IShoppingCartRepository>();
+        var shoppingCart = await shoppingCartRepo.GetByUserIdAsync(userId);
+
+        DisplayShoppingCart(shoppingCart);
+        return;
+    }
+}
+
+static void DisplayShoppingCart(ShoppingCart? shoppingCart)
+{
+    Console.WriteLine();
+    Console.WriteLine("Shopping Cart Items:");
+    Console.WriteLine("--------------------------------------------------------");
+    Console.WriteLine("{0,-40} {1,-20} {2,-10} {3,-10}", "ID", "Product Name", "Price", "Quantity");
+    Console.WriteLine("--------------------------------------------------------");
+
+    if (shoppingCart?.Items is { Count: > 0 })
+    {
+        foreach (var item in shoppingCart.Items)
+        {
+            Console.WriteLine(
+                "{0,-40} {1,-20} {2,-10:C} {3,-10}",
+                item.ProductId,
+                TruncateString(item.ProductName, 20),
+                item.ProductPrice,
+                item.Quantity
+            );
+        }
+    }
+    else
+    {
+        Console.WriteLine("Your shopping cart is empty.");
     }
 
-    // Helper method to truncate strings and add ellipsis if necessary
-    private static string TruncateString(string value, int maxLength)
-    {
-        if (string.IsNullOrEmpty(value)) return value;
-        return value.Length <= maxLength ? value : value.Substring(0, maxLength - 3) + "...";
-    }
+    Console.WriteLine("--------------------------------------------------------");
+}
+
+static string TruncateString(string value, int maxLength)
+{
+    if (string.IsNullOrEmpty(value)) return value;
+    return value.Length <= maxLength
+        ? value
+        : value[..(maxLength - 3)] + "...";
 }

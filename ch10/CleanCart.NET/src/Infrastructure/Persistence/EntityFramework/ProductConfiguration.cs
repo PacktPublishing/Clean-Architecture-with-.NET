@@ -11,7 +11,7 @@ internal class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasKey(product => product.Id);
         builder.Property(product => product.Id).ValueGeneratedNever();
         builder.Property(product => product.Name).IsRequired().HasMaxLength(255);
-        builder.Property(product => product.Price).IsRequired().HasColumnType("decimal(18,2)");
+        builder.Property(product => product.Price).IsRequired().HasPrecision(18, 2);
         builder.Property(product => product.StockLevel).IsRequired();
         builder.Property(product => product.ImageUrl).IsRequired().HasMaxLength(4000);
 

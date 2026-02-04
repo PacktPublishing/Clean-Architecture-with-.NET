@@ -15,7 +15,7 @@ internal class OrderConfiguration : IEntityTypeConfiguration<Order>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(order => order.Id).ValueGeneratedNever();
-        builder.Property(order => order.TotalAmount).IsRequired();
+        builder.Property(order => order.TotalAmount).IsRequired().HasPrecision(18, 2);
         builder.Property(order => order.CreatedOn).IsRequired();
         builder.Property(order => order.Status).IsRequired().HasMaxLength(20).HasConversion<string>();
 
@@ -30,7 +30,7 @@ internal class OrderConfiguration : IEntityTypeConfiguration<Order>
 
             orderItemBuilder.Property(orderItem => orderItem.Quantity).IsRequired();
             orderItemBuilder.Property(orderItem => orderItem.ProductName).IsRequired().HasMaxLength(255);
-            orderItemBuilder.Property(orderItem => orderItem.ProductPrice).IsRequired();
+            orderItemBuilder.Property(orderItem => orderItem.ProductPrice).IsRequired().HasPrecision(18, 2);
         });
     }
 }

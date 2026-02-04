@@ -17,8 +17,8 @@ public class PresentationMappingTests
     public PresentationMappingTests()
     {
         var services = new ServiceCollection();
-        var configuration = new ConfigurationBuilder().Build();
-        var startup = new Startup(configuration);
+        var config = new ConfigurationBuilder();
+        var startup = new ServiceCompositionRoot(config.Build());
         startup.ConfigureServices(services);
         // Get the real mapper from the service provider
         // Testing the profile itself will not catch runtime errors

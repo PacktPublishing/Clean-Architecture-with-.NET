@@ -1,25 +1,22 @@
 ﻿using Application.Interfaces.Auth;
-using Infrastructure.Extensions;
-using Infrastructure.Helpers;
 using Infrastructure.Startup;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Presentation.Common.Extensions;
 using Presentation.Functions.Auth;
 using StartupOrchestration.NET;
-using System.Reflection;
 
 namespace Presentation.Functions;
 
 /// <summary>
 /// Startup class for the Azure Functions application, orchestrating the configuration and service registrations.
 /// </summary>
-public sealed class Startup : StartupOrchestrator<AppStartupOrchestrator>
+public sealed class PresentationServiceComposition : StartupOrchestrator<AppStartupOrchestrator>
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="Startup"/> class with the provided configuration builder.
+    /// Initializes a new instance of the <see cref="PresentationServiceComposition"/> class with the provided configuration builder.
     /// </summary>
-    public Startup(IConfigurationBuilder builder)
+    public PresentationServiceComposition(IConfigurationBuilder builder)
     {
         // Assign the externally provided IConfigurationBuilder so it can be used during configuration construction.
         // ⚠️ This property is virtual in the base class, so this class is marked as 'sealed' to avoid triggering
@@ -31,22 +28,9 @@ public sealed class Startup : StartupOrchestrator<AppStartupOrchestrator>
         ServiceRegistrationExpressions.Add((services, config) => services.AddOpenTelemetry(config));
     }
 
-    protected override void SetBasePath(IConfigurationBuilder builder)
-    {
-        // Fix for isolated Azure Functions not finding the appsettings.json file in production
-        // https://stackoverflow.com/questions/78119200/appsettings-for-azurefunction-on-net-8-isolated
-        if (!AspNetEnvironmentHelper.IsDevelopment())
-        {
-            string assemblyPath = Assembly.GetExecutingAssembly().Location;
-            string assemblyDir = Path.GetDirectoryName(assemblyPath) ?? Directory.GetCurrentDirectory();
-            builder.SetBasePath(assemblyDir);
-        }
-    }
-
     /// <inheritdoc />
     protected override void AddConfigurationProviders(IConfigurationBuilder builder)
     {
-        builder.AddCoreLayerConfiguration();
-        builder.AddPresentationLayerConfiguration();
+        // To be removed.
     }
 }

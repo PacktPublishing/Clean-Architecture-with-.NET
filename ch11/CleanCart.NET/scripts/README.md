@@ -32,17 +32,41 @@ This script:
 
 - Removes any existing SQL Server Docker container with the name `odyssey_sqlserver`.
 - Runs a new SQL Server container in Docker on port 4000.
-- Sets the connection string environment variable for SQL Server.
+- Sets the connection string for SQL Server as a User Secret on the `Infrastructure` project.
 - Waits for SQL Server to become available.
 - Calls `Start-Migrations.ps1` to apply migrations.
 
-Run this script from the root directory of the repository:
+Run this script from the **solution root for the chapter** or **solution root for your project if copied**:
 
 ```powershell
 .\scripts\Initialize-Database.ps1
 ```
 
+> ⚠️ Warning: Each chapter contains its own solution and Infrastructure project. Running scripts from the repository root may cause the wrong project to be resolved.
+
 > Note: Each time these scripts are run, the database is deleted and recreated, making this approach well-suited for active development where frequent schema changes occur. This promotes agility by allowing developers to make and test breaking changes in the database schema without concerns about preserving existing data.
+
+#### ⚠️ Important Note on Connection Strings in This Repository
+
+The database connection string used by these scripts is **intentionally included in source control** as part of this book’s learning materials.
+
+This is done **solely for demonstration purposes** so that:
+
+- Readers can run the project immediately without additional setup
+- Database initialization remains fully automated and repeatable
+- Until Azure Key Vault is introduced, chapters can focus on Clean Architecture concepts instead of secret management
+
+**You should NOT do this in your own projects.**
+
+In real-world applications:
+
+- Connection strings must **never** be checked into source control
+- Secrets should be supplied via environment variables, user secrets, or a secure secrets manager (such as Azure Key Vault)
+- Initialization scripts should accept configuration externally, not embed credentials
+
+This repository trades strict security practices for approachability and clarity in a controlled, local-only learning environment. Treat it as instructional scaffolding—not a production template.
+
+---
 
 ### 2. Start-Migrations.ps1
 
@@ -68,7 +92,7 @@ _For further details on adding and managing migrations, see the official [Entity
 
 ---
 
-## About dotnet-ef and Configuration Setup
+## Reference: dotnet-ef and Tooling Configuration
 
 To ensure the database schema is up-to-date and populated with necessary tables and initial data, we use the `dotnet-ef` tool to apply migrations. This tool streamlines the database initialization process, making it efficient and repeatable across different environments.
 

@@ -1,27 +1,66 @@
 using Infrastructure.Extensions;
+using Presentation.BSA;
 using Presentation.BSA.Extensions;
 
-namespace Presentation.BSA;
+var builder = WebApplication.CreateBuilder(args);
 
-public static class Program
+// ------------------------------------------------------------
+// Configuration
+// ------------------------------------------------------------
+
+// Ensure configuration is resolved relative to the entry assembly
+string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+string basePath = Directory.GetParent(assemblyLocation)!.FullName;
+
+builder.Configuration
+    .SetBasePath(basePath)
+    .AddCoreLayerConfiguration()
+    .AddPresentationLayerConfiguration();
+
+// ------------------------------------------------------------
+// Services
+// ------------------------------------------------------------
+
+// Delegate all service registration
+var compositionRoot = new ServiceCompositionRoot(builder.Configuration);
+compositionRoot.ConfigureServices(builder.Services);
+
+var app = builder.Build();
+
+// ------------------------------------------------------------
+// Middleware Pipeline
+// ------------------------------------------------------------
+
+if (app.Environment.IsDevelopment())
 {
-    public static void Main(string[] args)
-    {
-        CreateHostBuilder(args).Build().Run();
-    }
-
-    public static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args)
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.UseStartup<Startup>();
-                webBuilder.ConfigureAppConfiguration((hostingContext, config) =>
-                {
-                    string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                    string path = Directory.GetParent(assemblyLocation)!.FullName;
-                    config.SetBasePath(path);
-                    config.AddCoreLayerConfiguration();
-                    config.AddPresentationLayerConfiguration();
-                });
-            });
+    app.UseDeveloperExceptionPage();
 }
+else
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+
+// Static files are handled before endpoint execution
+app.UseStaticFiles();
+
+// Security middleware
+app.UseAntiforgery();
+app.UseAuthentication();
+app.UseAuthorization();
+
+// ------------------------------------------------------------
+// Endpoints
+// ------------------------------------------------------------
+
+app.MapBlazorHub();
+app.MapFallbackToPage("/_Host");
+app.MapRazorPages();
+// Controllers are required for Microsoft.Identity.Web.UI endpoints such as:
+// - /MicrosoftIdentity/Account/SignIn
+// - /MicrosoftIdentity/Account/SignedOut
+app.MapControllers();
+
+await app.RunAsync();

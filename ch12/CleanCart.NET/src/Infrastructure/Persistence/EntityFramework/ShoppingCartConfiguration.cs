@@ -26,7 +26,7 @@ internal class ShoppingCartConfiguration : IEntityTypeConfiguration<ShoppingCart
 
             shoppingCartItemBuilder.Property(cartItem => cartItem.Quantity).IsRequired();
             shoppingCartItemBuilder.Property(cartItem => cartItem.ProductName).IsRequired().HasMaxLength(255);
-            shoppingCartItemBuilder.Property(cartItem => cartItem.ProductPrice).IsRequired().HasColumnType("decimal(18,2)");
+            shoppingCartItemBuilder.Property(cartItem => cartItem.ProductPrice).IsRequired().HasPrecision(18, 2);
         });
     }
 }
