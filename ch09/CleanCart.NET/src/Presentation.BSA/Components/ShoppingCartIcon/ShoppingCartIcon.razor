@@ -37,7 +37,7 @@
     private IUserRepository UserRepository { get; set; } = null!;
 
     [Inject]
-    private ShoppingCartState ShoppingCartState { get; set; } = null!;
+    private ShoppingCartStateContainer ShoppingCartStateContainer { get; set; } = null!;
 
     [Inject]
     private NavigationManager Navigation { get; set; } = null!;
@@ -49,7 +49,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        ShoppingCartState.OnChange += UpdateCart;
+        ShoppingCartStateContainer.OnChange += UpdateCart;
         _user ??= await AuthenticationService.GetCurrentUserAsync();
         if (_user != null)
             await RefreshShoppingCart();
@@ -75,6 +75,6 @@
 
     public void Dispose()
     {
-        ShoppingCartState.OnChange -= UpdateCart;
+        ShoppingCartStateContainer.OnChange -= UpdateCart;
     }
 }

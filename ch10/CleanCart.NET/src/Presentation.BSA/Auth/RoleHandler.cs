@@ -12,25 +12,17 @@ public class RoleHandler(IUserRepository userRepository) : AuthorizationHandler<
     {
         var username = context.User.GetEmail();
         if (string.IsNullOrEmpty(username))
-        {
             return;
-        }
 
         var user = await userRepository.GetByUsernameAsync(username);
         if (user == null)
-        {
             return;
-        }
 
         if (!Enum.TryParse(requirement.RoleName, out UserRole role))
-        {
             return;
-        }
 
         if (!user.Roles.Contains(role) && !user.Roles.Contains(UserRole.Administrator))
-        {
             return;
-        }
 
         // User has the expected role or is an administrator
         context.Succeed(requirement);

@@ -25,14 +25,14 @@ public partial class ShoppingCartView : IDisposable
     private NavigationManager Navigation { get; set; } = null!;
 
     [Inject]
-    private ShoppingCartState ShoppingCartState { get; set; } = null!;
+    private ShoppingCartStateContainer ShoppingCartStateContainer { get; set; } = null!;
 
     private User? _user;
     private ShoppingCart? _shoppingCart;
 
     protected override async Task OnInitializedAsync()
     {
-        ShoppingCartState.OnChange += UpdateCart;
+        ShoppingCartStateContainer.OnChange += UpdateCart;
         _user ??= await AuthenticationService.GetCurrentUserAsync();
         await LoadShoppingCart();
     }
@@ -54,7 +54,7 @@ public partial class ShoppingCartView : IDisposable
         {
             var input = new RemoveItemFromCartInput(_user!.Id, productId, 1);
             await RemoveItemFromCartUseCase.RemoveItemFromCartAsync(input);
-            ShoppingCartState.NotifyCartChanged();
+            ShoppingCartStateContainer.NotifyCartChanged();
             UpdateCart();
         }
     }
@@ -66,6 +66,6 @@ public partial class ShoppingCartView : IDisposable
 
     public void Dispose()
     {
-        ShoppingCartState.OnChange -= UpdateCart;
+        ShoppingCartStateContainer.OnChange -= UpdateCart;
     }
 }

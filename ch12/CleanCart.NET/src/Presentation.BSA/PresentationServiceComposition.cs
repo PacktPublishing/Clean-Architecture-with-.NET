@@ -22,13 +22,13 @@ public sealed class PresentationServiceComposition : StartupOrchestrator<AppStar
         // Add Presentation Services
         ServiceRegistrationExpressions.Add((services, config) => services.AddAuthentication(config));
         ServiceRegistrationExpressions.Add((services, config) => services.AddAuthorization(config));
-        ServiceRegistrationExpressions.Add((services, config) => services.AddRazorPagesWithAuthorization(config));
+        ServiceRegistrationExpressions.Add((services, config) => services.AddRazorPagesAndIdentityUI(config));
         ServiceRegistrationExpressions.Add((services, config) => services.AddCascadingAuthenticationState());
         ServiceRegistrationExpressions.Add((services, config) => services.AddServerSideBlazor(null));
         ServiceRegistrationExpressions.Add((services, config) => services.AddMudBlazorServices(config));
 
         // Add Services
-        ServiceRegistrationExpressions.Add((services, config) => services.AddScoped<ShoppingCartState>());
+        ServiceRegistrationExpressions.Add((services, config) => services.AddScoped<ShoppingCartStateContainer>());
         ServiceRegistrationExpressions.Add((services, config) => services.AddScoped<IAuthenticationService, BlazorAuthenticationService>());
 
         // Add AutoMapper Profiles

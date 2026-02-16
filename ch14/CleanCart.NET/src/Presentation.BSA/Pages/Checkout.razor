@@ -42,7 +42,7 @@ else
 
         <MudForm @ref="_form"
                  Model="@_viewModel"
-                 Class="p-4"
+                 Class="pa-4"
                  Validation="@(_viewModelValidator.ValidateValue)">
 
             <AntiforgeryToken/>
@@ -81,12 +81,13 @@ else
                           Label="Postal Code"/>
 
             @* Note: for MudForm, do NOT use a button with ButtonType="ButtonType.Submit" *@
-            <MudButton Class="mt-3"
-                       Color="Color.Primary"
-                       Variant="Variant.Filled"
-                       OnClick="@(async () => await OnFormSubmit())">
+            <MudLoadingButton Class="mt-3"
+                              Color="Color.Primary"
+                              Variant="Variant.Filled"
+                              Loading="@_isSubmitting"
+                              OnClick="@OnFormSubmit">
                 Submit Payment
-            </MudButton>
+            </MudLoadingButton>
         </MudForm>
     </MudPaper>
 }

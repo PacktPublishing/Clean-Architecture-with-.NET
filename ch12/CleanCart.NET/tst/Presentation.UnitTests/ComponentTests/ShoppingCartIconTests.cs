@@ -18,13 +18,13 @@ public class ShoppingCartIconTests
     private readonly IAuthenticationService _authMock = Substitute.For<IAuthenticationService>();
     private readonly IMediator _mediator = Substitute.For<IMediator>();
 
-    private readonly ShoppingCartState _cartState = new();
+    private readonly ShoppingCartStateContainer _cartStateContainer = new();
 
     private void ConfigureServices(BunitContext ctx)
     {
         ctx.Services.AddScoped(_ => _authMock);
         ctx.Services.AddScoped(_ => _mediator);
-        ctx.Services.AddScoped(_ => _cartState);
+        ctx.Services.AddScoped(_ => _cartStateContainer);
 
         ctx.Services.AddMudServices();
         ctx.Services.AddMudPopoverService();

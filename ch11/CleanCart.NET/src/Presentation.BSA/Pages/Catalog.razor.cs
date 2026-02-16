@@ -1,4 +1,5 @@
-﻿using Application.Interfaces.Auth;
+﻿using Application.Common.Models;
+using Application.Interfaces.Auth;
 using Application.Interfaces.Data;
 using Application.Interfaces.UseCases;
 using Application.UseCases.AddItemToCart;
@@ -22,16 +23,16 @@ public partial class Catalog
     private IUserRepository UserRepository { get; set; } = null!;
 
     [Inject]
-    private ShoppingCartState ShoppingCartState { get; set; } = null!;
+    private ShoppingCartStateContainer ShoppingCartStateContainer { get; set; } = null!;
 
     [Inject]
     private IAddItemToCartUseCase AddItemToCartUseCase { get; set; } = null!;
 
     private User? _user;
 
-    private List<Product> _products = new();
+    private PagedResult<Product>? _pagedResult;
     private bool _isLoading = true;
-    private List<Product> PagedProducts => _products.Skip((CurrentPage - 1) * PageSize).Take(PageSize).ToList();
+
     private int CurrentPage { get; set; } = 1;
     private int PageSize { get; set; } = 6;
 
@@ -43,14 +44,17 @@ public partial class Catalog
 
     private async Task LoadProducts()
     {
-        // We're loading all products, but in a real-world scenario, you'd want to implement pagination
-        _products = await ProductRepository.GetAllAsync();
+        _isLoading = true;
+
+        _pagedResult = await ProductRepository.GetPagedAsync(CurrentPage, PageSize);
+
         _isLoading = false;
     }
 
-    private void ChangePage(int page)
+    private async Task ChangePage(int page)
     {
         CurrentPage = page;
+        await LoadProducts();
     }
 
     private async Task AddToCart(Guid productId)
@@ -62,6 +66,6 @@ public partial class Catalog
         var input = new AddItemToCartInput(_user.Id, productId, 1);
         await AddItemToCartUseCase.AddItemToCartAsync(input);
         // Notify other components about the cart change
-        ShoppingCartState.NotifyCartChanged();
+        ShoppingCartStateContainer.NotifyCartChanged();
     }
 }

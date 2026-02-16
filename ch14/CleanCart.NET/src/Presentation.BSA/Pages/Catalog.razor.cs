@@ -1,6 +1,7 @@
 ﻿using Application.Interfaces.Auth;
 using Application.Operations.UseCases.AddItemToCart;
 using Domain.Entities;
+using EntityAxis.Abstractions;
 using EntityAxis.MediatR.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -16,16 +17,16 @@ public partial class Catalog
     private IAuthenticationService AuthenticationService { get; set; } = null!;
 
     [Inject]
-    private ShoppingCartState ShoppingCartState { get; set; } = null!;
+    private IMediator Mediator { get; set; } = null!;
 
     [Inject]
-    private IMediator Mediator { get; set; } = null!;
+    private ShoppingCartStateContainer ShoppingCartStateContainer { get; set; } = null!;
 
     private User? _user;
 
-    private List<Product> _products = new();
+    private PagedResult<Product>? _pagedResult;
     private bool _isLoading = true;
-    private List<Product> PagedProducts => _products.Skip((CurrentPage - 1) * PageSize).Take(PageSize).ToList();
+
     private int CurrentPage { get; set; } = 1;
     private int PageSize { get; set; } = 6;
 
@@ -37,15 +38,18 @@ public partial class Catalog
 
     private async Task LoadProducts()
     {
-        // We're loading all products, but in a real-world scenario, you'd want to implement pagination
-        var query = new GetAllEntitiesQuery<Product, Guid>();
-        _products = await Mediator.Send(query);
+        _isLoading = true;
+
+        var query = new GetPagedEntitiesQuery<Product, Guid>(CurrentPage, PageSize);
+        _pagedResult = await Mediator.Send(query);
+
         _isLoading = false;
     }
 
-    private void ChangePage(int page)
+    private async Task ChangePage(int page)
     {
         CurrentPage = page;
+        await LoadProducts();
     }
 
     private async Task AddToCart(Guid productId)
@@ -57,6 +61,6 @@ public partial class Catalog
         var command = new AddItemToCartCommand(_user.Id, productId, 1);
         await Mediator.Send(command);
         // Notify other components about the cart change
-        ShoppingCartState.NotifyCartChanged();
+        ShoppingCartStateContainer.NotifyCartChanged();
     }
 }

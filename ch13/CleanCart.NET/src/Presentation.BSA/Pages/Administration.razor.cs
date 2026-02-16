@@ -21,17 +21,21 @@ public partial class Administration
     [Inject]
     private IMediator Mediator { get; set; } = null!;
 
-    private List<Product> _products = new();
+    private MudTable<Product>? _table;
 
-    protected override async Task OnInitializedAsync()
+    private async Task<TableData<Product>> LoadServerData(TableState state, CancellationToken token)
     {
-        await LoadProducts();
-    }
+        var page = state.Page + 1; // MudTable is 0-based
+        var pageSize = state.PageSize;
 
-    private async Task LoadProducts()
-    {
-        var query = new GetAllEntitiesQuery<Product, Guid>();
-        _products = await Mediator.Send(query);
+        var query = new GetPagedEntitiesQuery<Product, Guid>(page, pageSize);
+        var result = await Mediator.Send(query, token);
+
+        return new TableData<Product>
+        {
+            Items = result.Items,
+            TotalItems = result.TotalItemCount
+        };
     }
 
     private void OnStockLevelChanged(Product product, int stockLevel)
@@ -39,13 +43,17 @@ public partial class Administration
         product.UpdateStockLevel(stockLevel);
     }
 
-    private async Task UpdateStockLevel(Guid productId, int stockLevel)
+    private async Task UpdateStockLevel(Guid productId, int stockLevel, string productName)
     {
-        User user = await AuthenticationService.GetCurrentUserAsync() ?? throw new UnauthorizedAccessException("User not found.");
+        var user = await AuthenticationService.GetCurrentUserAsync()
+                   ?? throw new UnauthorizedAccessException("User not found.");
+
         var command = new UpdateProductInventoryCommand(user.Id, productId, stockLevel);
         await Mediator.Send(command);
 
-        var productName = _products.First(p => p.Id == productId).Name;
-        Snackbar.Add($"{productName} stock updated.", Severity.Success);
+        Snackbar.Add($"Stock level for '{productName}' updated to {stockLevel}.", Severity.Success);
+
+        if (_table is not null)
+            await _table.ReloadServerData();
     }
 }

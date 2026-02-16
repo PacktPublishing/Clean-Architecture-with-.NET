@@ -24,20 +24,10 @@ public static class ServiceCollectionExtensions
             .AddMicrosoftIdentityWebApp(configuration.GetSection("AzureAd"));
     }
 
-    public static void AddRazorPagesWithAuthorization(this IServiceCollection services, IConfiguration configuration)
+    public static void AddRazorPagesAndIdentityUI(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddRazorPages(options =>
-            {
-                options.Conventions.AllowAnonymousToPage("/");
-            })
-            // Add Authorization to Razor Pages
-            .AddMvcOptions(options =>
-            {
-                AuthorizationPolicy policy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build();
-                options.Filters.Add(new AuthorizeFilter(policy));
-            })
+        services
+            .AddRazorPages()
             .AddMicrosoftIdentityUI();
     }
 
@@ -60,26 +50,17 @@ public static class ServiceCollectionExtensions
     {
         services.AddAuthorization(options =>
         {
-            // By default, all incoming requests will be authorized according to 
-            // the default policy
-            options.FallbackPolicy = options.DefaultPolicy;
+            var roleNames = typeof(UserRole).GetFields().Select(x => x.Name);
+
+            foreach (var roleName in roleNames)
+            {
+                options.AddPolicy(roleName, policyBuilder =>
+                {
+                    policyBuilder.AddRequirements(new RoleRequirement(roleName));
+                });
+            }
         });
 
         services.AddScoped<IAuthorizationHandler, RoleHandler>();
-
-        var roleNames = typeof(UserRole).GetFields().Select(x => x.Name);
-        foreach (var roleName in roleNames)
-        {
-            services.AddAuthorizationCore(
-                options =>
-                    options.AddPolicy(
-                        roleName,
-                        policyBuilder =>
-                        {
-                            policyBuilder.AddRequirements(new RoleRequirement(roleName));
-                        }
-                    )
-            );
-        }
     }
 }

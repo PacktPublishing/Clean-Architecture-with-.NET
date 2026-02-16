@@ -1,24 +1,17 @@
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Presentation.IntegrationTests;
 
-public class StartupTests : IClassFixture<WebApplicationFactory<Program>>
+public class StartupTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly WebApplicationFactory<Program> _factory;
-
-    public StartupTests(WebApplicationFactory<Program> factory)
-    {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Development");
-        });
-    }
+    private readonly WebApplicationFactory<Program> _factory = factory.WithWebHostBuilder(_ => { });
 
     [Fact]
     public async Task Application_StartsSuccessfully()
     {
+        // Ensure test environment is set to Development for this test
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
+
         using var client = _factory.CreateClient();
 
         var response = await client.GetAsync("/");

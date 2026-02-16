@@ -2,7 +2,7 @@
 
 <PageTitle>Administration</PageTitle>
 
-<MudContainer>
+<MudContainer Class="pa-0">
 
     <MudText Typo="Typo.h3" Class="mb-4">Administration</MudText>
 
@@ -10,38 +10,43 @@
 
         <MudText Typo="Typo.h4">Product Inventory Management</MudText>
 
-        @if (!_products.Any())
-        {
-            <MudText Typo="Typo.subtitle1">No products available.</MudText>
-        }
-        else
-        {
-            <MudTable Items="_products" Striped Bordered Hover>
+        <MudTable T="Product"
+                  @ref="_table"
+                  ServerData="LoadServerData"
+                  Dense
+                  Hover
+                  Striped
+                  Elevation="0"
+                  Breakpoint="Breakpoint.Xs"
+                  LoadingProgressColor="Color.Info">
 
-                <HeaderContent>
-                    <MudTh>Product</MudTh>
-                    <MudTh>Price</MudTh>
-                    <MudTh>Stock Level</MudTh>
-                    <MudTh>Actions</MudTh>
-                </HeaderContent>
+            <HeaderContent>
+                <MudTh>Product</MudTh>
+                <MudTh>Price</MudTh>
+                <MudTh>Stock Level</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
 
-                <RowTemplate>
-                    <MudTd>@context.Name</MudTd>
-                    <MudTd>@context.Price.ToString("C")</MudTd>
-                    <MudTd>
-                        <MudTextField T="int"
-                                      Value="context.StockLevel"
-                                      ValueChanged="@(new Action<int>(value => OnStockLevelChanged(context, value)))"/>
-                    </MudTd>
-                    <MudTd>
-                        <MudButton Color="Color.Primary"
-                                   OnClick="() => UpdateStockLevel(context.Id, context.StockLevel)">
-                            Update
-                        </MudButton>
-                    </MudTd>
-                </RowTemplate>
+            <RowTemplate>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.Price.ToString("C")</MudTd>
+                <MudTd>
+                    <MudTextField T="int"
+                                  Value="context.StockLevel"
+                                  ValueChanged="@(new Action<int>(value => OnStockLevelChanged(context, value)))"/>
+                </MudTd>
+                <MudTd>
+                    <MudButton Color="Color.Primary"
+                               OnClick="() => UpdateStockLevel(context.Id, context.StockLevel, context.Name)">
+                        Update
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
 
-            </MudTable>
-        }
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new []{ 5, 10, 25, 50 }" />
+            </PagerContent>
+        </MudTable>
+
     </MudPaper>
 </MudContainer>

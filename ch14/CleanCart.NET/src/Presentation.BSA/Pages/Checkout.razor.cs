@@ -27,10 +27,16 @@ public partial class Checkout
     private IMediator Mediator { get; set; } = null!;
 
     [Inject]
+    private ISnackbar Snackbar { get; set; } = null!;
+
+    [Inject]
     private NavigationManager Navigation { get; set; } = null!;
 
     [Inject]
-    private ShoppingCartState ShoppingCartState { get; set; } = null!;
+    private ShoppingCartStateContainer ShoppingCartStateContainer { get; set; } = null!;
+
+    [Inject]
+    private ILogger<Checkout> Logger { get; set; } = null!;
 
     private readonly CheckoutViewModel _viewModel = new();
     private readonly CheckoutViewModelValidator _viewModelValidator = new();
@@ -38,6 +44,7 @@ public partial class Checkout
     private User _user = null!;
     private MudForm _form = null!;
     private decimal _cartTotal;
+    private bool _isSubmitting;
 
     protected override async Task OnInitializedAsync()
     {
@@ -59,26 +66,32 @@ public partial class Checkout
     private async Task OnFormSubmit()
     {
         await _form.Validate();
-        Order? order = null;
-        if (_form.IsValid)
+        if (!_form.IsValid)
+            return;
+
+        _isSubmitting = true;
+
+        try
         {
-            try
-            {
-                var command = Mapper.Map<ProcessPaymentCommand>(_viewModel);
+            var command = Mapper.Map<ProcessPaymentCommand>(_viewModel);
                 command.UserId = _user.Id;
                 command.Items = _shoppingCart!.Items.ToList();
-                order = await Mediator.Send(command);
-                ShoppingCartState.NotifyCartChanged();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
+
+            Order? order = await Mediator.Send(command);
+
+            ShoppingCartStateContainer.NotifyCartChanged();
 
             if (order != null)
-            {
                 Navigation.NavigateTo($"/order-confirmation/{order.Id}");
-            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("An error occurred while processing your payment. Please try again.", Severity.Error);
+            Logger.LogError(ex, "Error processing payment for user {UserId}", _user.Id);
+        }
+        finally
+        {
+            _isSubmitting = false;
         }
     }
 }

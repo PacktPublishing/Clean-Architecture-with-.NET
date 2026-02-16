@@ -2,7 +2,7 @@
 
 <PageTitle>Product Catalog</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Medium">
+<MudContainer Class="pa-0" MaxWidth="MaxWidth.Medium">
 
     <MudText Typo="Typo.h3" Class="mb-4">Product Catalog</MudText>
 
@@ -27,7 +27,7 @@
         }
         else
         {
-            @foreach (var product in PagedProducts)
+            @foreach (var product in _pagedResult?.Items ?? [])
             {
                 <MudItem xs="12" sm="6" md="4">
                     <MudCard Style="height: 100%" Class="d-flex flex-column justify-space-between">
@@ -55,5 +55,6 @@
 
     <MudPagination Selected="@CurrentPage"
                    SelectedChanged="ChangePage"
-                   Count="@((int) Math.Ceiling((double) _products.Count / PageSize))" />
+                   Count="@(_pagedResult?.TotalPages ?? 0)" />
+
 </MudContainer>

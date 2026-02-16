@@ -11,7 +11,7 @@ public class BlazorAuthenticationService(AuthenticationStateProvider authStatePr
     public async Task<User?> GetCurrentUserAsync()
     {
         var state = await authStateProvider.GetAuthenticationStateAsync();
-        if (state.User.Identity is { IsAuthenticated: false })
+        if (state.User.Identity == null || !state.User.Identity.IsAuthenticated)
         {
             return null;
         }

@@ -1,6 +1,6 @@
 ﻿namespace Presentation.BSA.Services;
 
-public class ShoppingCartState
+public class ShoppingCartStateContainer
 {
     public event Action? OnChange;
 

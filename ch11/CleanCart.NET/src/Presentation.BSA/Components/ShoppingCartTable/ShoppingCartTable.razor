@@ -44,7 +44,7 @@ else
     private ICalculateCartTotalUseCase CalculateCartTotalUseCase { get; set; } = null!;
 
     [Inject]
-    private ShoppingCartState ShoppingCartState { get; set; } = null!;
+    private ShoppingCartStateContainer ShoppingCartStateContainer { get; set; } = null!;
 
     private User? _user;
     private decimal _cartTotal;
@@ -72,7 +72,7 @@ else
 
         await OnRemoveItemClicked.InvokeAsync(productId);
         await CalculateCartTotal();
-        ShoppingCartState.NotifyCartChanged();
+        ShoppingCartStateContainer.NotifyCartChanged();
         StateHasChanged();
     }
 }

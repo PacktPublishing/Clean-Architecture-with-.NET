@@ -36,15 +36,9 @@ public class ServiceCompositionRoot(IConfiguration configuration)
 
         AddAuthorization(services);
 
-        services.AddRazorPages(options => {
-                options.Conventions.AllowAnonymousToPage("/");
-            })
-            .AddMvcOptions(options => {
-                AuthorizationPolicy policy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build();
-                options.Filters.Add(new AuthorizeFilter(policy));
-            }).AddMicrosoftIdentityUI();
+        services
+            .AddRazorPages()
+            .AddMicrosoftIdentityUI();
 
         services.AddCascadingAuthenticationState();
 
@@ -68,33 +62,24 @@ public class ServiceCompositionRoot(IConfiguration configuration)
         services.AddSingleton<Profile, PresentationMappingProfile>();
 
         // Add Presentation Services
-        services.AddScoped<ShoppingCartState>();
+        services.AddScoped<ShoppingCartStateContainer>();
     }
 
     static void AddAuthorization(IServiceCollection services)
     {
         services.AddAuthorization(options =>
         {
-            // By default, all incoming requests will be authorized according to 
-            // the default policy
-            options.FallbackPolicy = options.DefaultPolicy;
+            var roleNames = typeof(UserRole).GetFields().Select(x => x.Name);
+
+            foreach (var roleName in roleNames)
+            {
+                options.AddPolicy(roleName, policyBuilder =>
+                {
+                    policyBuilder.AddRequirements(new RoleRequirement(roleName));
+                });
+            }
         });
 
         services.AddScoped<IAuthorizationHandler, RoleHandler>();
-
-        var roleNames = typeof(UserRole).GetFields().Select(x => x.Name);
-        foreach (var roleName in roleNames)
-        {
-            services.AddAuthorizationCore(
-                options =>
-                    options.AddPolicy(
-                        roleName,
-                        policyBuilder =>
-                        {
-                            policyBuilder.AddRequirements(new RoleRequirement(roleName));
-                        }
-                    )
-            );
-        }
     }
 }

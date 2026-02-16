@@ -19,7 +19,7 @@ public class ShoppingCartIconTests
     private readonly IShoppingCartRepository _cartRepoMock = Substitute.For<IShoppingCartRepository>();
     private readonly IUserRepository _userRepoMock = Substitute.For<IUserRepository>();
 
-    private readonly ShoppingCartState _cartState = new();
+    private readonly ShoppingCartStateContainer _cartStateContainer = new();
 
     private void ConfigureServices(BunitContext ctx)
     {
@@ -27,7 +27,7 @@ public class ShoppingCartIconTests
         ctx.Services.AddScoped(_ => _productRepoMock);
         ctx.Services.AddScoped(_ => _cartRepoMock);
         ctx.Services.AddScoped(_ => _userRepoMock);
-        ctx.Services.AddScoped(_ => _cartState);
+        ctx.Services.AddScoped(_ => _cartStateContainer);
 
         ctx.Services.AddMudServices();
         ctx.Services.AddMudPopoverService();
