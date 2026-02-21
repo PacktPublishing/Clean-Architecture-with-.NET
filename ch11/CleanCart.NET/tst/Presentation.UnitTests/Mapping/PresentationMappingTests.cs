@@ -18,9 +18,9 @@ public class PresentationMappingTests
     {
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         var services = new ServiceCollection();
-        var config = new ConfigurationBuilder();
-        var startup = new PresentationServiceComposition(config);
-        startup.ConfigureServices(services);
+        var configuration = new ConfigurationBuilder().Build();
+        var startup = new PresentationServiceComposition();
+        startup.ConfigureServices(services, configuration);
         // Get the real mapper from the service provider
         // Testing the profile itself will not catch runtime errors
         Mapper = services.BuildServiceProvider().GetRequiredService<IMapper>();

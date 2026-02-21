@@ -19,8 +19,8 @@ builder.Configuration.SetBasePath(path);
 builder.Configuration.AddCoreLayerConfiguration();
 
 // Register services using your existing composition root
-var serviceComposition = new PresentationServiceComposition(builder.Configuration);
-serviceComposition.ConfigureServices(builder.Services);
+var serviceComposition = new PresentationServiceComposition();
+serviceComposition.ConfigureServices(builder.Services, builder.Configuration);
 
 // Build the host
 using var host = builder.Build();

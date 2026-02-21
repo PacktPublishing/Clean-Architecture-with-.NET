@@ -7,7 +7,6 @@ using Infrastructure.Extensions;
 using Microsoft.Extensions.Configuration;
 
 var builder = Host.CreateDefaultBuilder(args);
-PresentationServiceComposition? serviceComposition = null;
 
 // ------------------------------------------------------------
 // Configuration
@@ -16,9 +15,6 @@ PresentationServiceComposition? serviceComposition = null;
 builder.ConfigureAppConfiguration(
     (context, configBuilder) =>
     {
-        // Explicitly rely on the configuration builder provided by the host
-        serviceComposition = new PresentationServiceComposition(configBuilder);
-
         // Fix for isolated Azure Functions not finding the appsettings.json file in deployed environment
         // https://stackoverflow.com/questions/78119200/appsettings-for-azurefunction-on-net-8-isolated
         if (!AspNetEnvironmentHelper.IsDevelopment())
@@ -44,7 +40,8 @@ builder
 builder.ConfigureServices(
     (context, services) =>
     {
-        serviceComposition!.ConfigureServices(services);
+        var serviceComposition = new PresentationServiceComposition();
+        serviceComposition!.ConfigureServices(services, context.Configuration);
     }
 );
 

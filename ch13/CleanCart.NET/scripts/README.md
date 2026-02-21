@@ -152,7 +152,7 @@ Here is an example `dotnet-tools.json` configuration for `dotnet-ef`:
   "isRoot": true,
   "tools": {
     "dotnet-ef": {
-      "version": "10.0.0",
+      "version": "10.0.2",
       "commands": ["dotnet-ef"]
     }
   }

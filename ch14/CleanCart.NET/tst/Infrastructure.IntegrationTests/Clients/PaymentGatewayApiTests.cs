@@ -4,7 +4,7 @@ using Infrastructure.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
-using Infrastructure.Startup;
+using Infrastructure.Composition;
 
 namespace Infrastructure.IntegrationTests.Clients;
 
@@ -17,8 +17,8 @@ public class PaymentGatewayApiTests
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder().AddCoreLayerConfiguration().Build();
-        var appStartupOrchestrator = new AppStartupOrchestrator();
-        appStartupOrchestrator.Orchestrate(services, configuration);
+        var pipeline = new AppServiceRegistrationPipeline();
+        pipeline.Execute(services, configuration);
         var serviceProvider = services.BuildServiceProvider();
         _sut = serviceProvider.GetRequiredService<IPaymentGatewayApi>();
     }

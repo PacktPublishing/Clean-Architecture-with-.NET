@@ -4,7 +4,7 @@ using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
 using FluentAssertions;
-using Infrastructure.Startup;
+using Infrastructure.Composition;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -24,8 +24,8 @@ public class InfrastructureMappingTests
             .Build();
 
         // Reuse the same extension that wires up AutoMapper and profiles
-        var appStartupOrchestrator = new AppStartupOrchestrator();
-        appStartupOrchestrator.Orchestrate(services, configuration);
+        var pipeline = new AppServiceRegistrationPipeline();
+        pipeline.Execute(services, configuration);
         Mapper = services.BuildServiceProvider().GetRequiredService<IMapper>();
     }
 

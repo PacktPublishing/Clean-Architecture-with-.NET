@@ -10,7 +10,7 @@
     <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.3.0" />
     <!-- Explicitly referencing KubernetesClient to override a vulnerable transitive version that comes through AspNetCore.HealthChecks.UI. -->
     <PackageReference Include="KubernetesClient" Version="18.0.13" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

@@ -1,44 +1,34 @@
 ﻿using Application.Interfaces.Auth;
 using AutoMapper;
-using Infrastructure.Startup;
+using Infrastructure.Composition;
 using Presentation.BSA.Auth;
 using Presentation.BSA.Extensions;
 using Presentation.BSA.Mapping;
 using Presentation.BSA.Services;
 using Presentation.Common.Extensions;
-using StartupOrchestration.NET;
+using ServiceComposition.NET;
 
 namespace Presentation.BSA;
 
-public sealed class PresentationServiceComposition : StartupOrchestrator<AppStartupOrchestrator>
+public class PresentationServiceComposition : ServiceCompositionRoot<AppServiceRegistrationPipeline>
 {
-    public PresentationServiceComposition(IConfigurationBuilder builder)
+    public PresentationServiceComposition()
     {
-        // Assign the externally provided IConfigurationBuilder so it can be used during configuration construction.
-        // ⚠️ This property is virtual in the base class, so this class is marked as 'sealed' to avoid triggering
-        // CA2214 (DoNotCallOverridableMethodsInConstructors). This prevents unintended behavior from derived classes
-        // accessing overridden members before their constructors have run.
-        DefaultConfigurationBuilder = builder;
-
         // Add Presentation Services
-        ServiceRegistrationExpressions.Add((services, config) => services.AddAuthentication(config));
-        ServiceRegistrationExpressions.Add((services, config) => services.AddAuthorization(config));
-        ServiceRegistrationExpressions.Add((services, config) => services.AddRazorPagesAndIdentityUI(config));
-        ServiceRegistrationExpressions.Add((services, config) => services.AddCascadingAuthenticationState());
-        ServiceRegistrationExpressions.Add((services, config) => services.AddServerSideBlazor(null));
-        ServiceRegistrationExpressions.Add((services, config) => services.AddMudBlazorServices(config));
-        ServiceRegistrationExpressions.Add((services, config) => services.AddOpenTelemetry(config));
+        AddRegistration((services, config) => services.AddAuthentication(config));
+        AddRegistration((services, config) => services.AddAuthorization(config));
+        AddRegistration((services, config) => services.AddRazorPagesAndIdentityUI(config));
+        AddRegistration((services, config) => services.AddMudBlazorServices(config));
+        AddRegistration((services, config) => services.AddOpenTelemetry(config));
+
+        AddRegistration(services => services.AddCascadingAuthenticationState());
+        AddRegistration(services => services.AddServerSideBlazor(null));
 
         // Add Services
-        ServiceRegistrationExpressions.Add((services, config) => services.AddScoped<ShoppingCartStateContainer>());
-        ServiceRegistrationExpressions.Add((services, config) => services.AddScoped<IAuthenticationService, BlazorAuthenticationService>());
+        AddRegistration(services => services.AddScoped<ShoppingCartStateContainer>());
+        AddRegistration(services => services.AddScoped<IAuthenticationService, BlazorAuthenticationService>());
 
         // Add AutoMapper Profiles
-        ServiceRegistrationExpressions.Add((services, config) => services.AddSingleton<Profile, PresentationMappingProfile>());
-    }
-
-    protected override void AddConfigurationProviders(IConfigurationBuilder builder)
-    {
-        // To be removed.
+        AddRegistration(services => services.AddSingleton<Profile, PresentationMappingProfile>());
     }
 }

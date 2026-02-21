@@ -90,8 +90,8 @@ builder.Host.UseSerilog((context, config) =>
 // ------------------------------------------------------------
 
 // Delegate all service registration
-var serviceComposition = new PresentationServiceComposition(builder.Configuration);
-serviceComposition.ConfigureServices(builder.Services);
+var serviceComposition = new PresentationServiceComposition();
+serviceComposition.ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
 
