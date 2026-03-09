@@ -9,62 +9,180 @@ if (-not (Test-Path "./CleanCart.NET.sln")) {
     Write-Error "Example:"
     Write-Error "  cd ch08/CleanCart.NET"
     Write-Error "  .\scripts\Initialize-Database.ps1"
-    Exit 1
+    exit 1
 }
 
 # ------------------------------------------------------------
-# User Secrets Configuration
+# Azure Key Vault Configuration
 # ------------------------------------------------------------
-$connStringVarName = "SqlServer:ConnectionString"
-$expectedConnectionString = "Server=localhost,4000; Database=CleanCart.NET; User Id=sa; Password=SqlSecret!; TrustServerCertificate=True"
+$keyVaultName = "podyssey-local"
+$secretName = "SqlServer--ConnectionString"
 
-Write-Output "Ensuring $connStringVarName is configured as a user secret..."
+Write-Host "Preparing Azure authentication..."
 
-$infraProjectPath = Resolve-Path "./src/Infrastructure/Infrastructure.csproj"
-
-if (-not (Test-Path $infraProjectPath)) {
-    Write-Error "Could not find Infrastructure.csproj at expected path:"
-    Write-Error "  ./src/Infrastructure/Infrastructure.csproj"
-    Exit 1
+# Ensure Azure CLI exists
+if (-not (Get-Command az -ErrorAction SilentlyContinue)) {
+    Write-Error "Azure CLI is required but not installed."
+    Write-Error "Install it from: https://learn.microsoft.com/cli/azure/install-azure-cli"
+    exit 1
 }
 
-# Ensure user-secrets is initialized (idempotent)
-dotnet user-secrets init --project "$infraProjectPath" | Out-Null
+# ------------------------------------------------------------
+# Tenant Configuration (cached locally)
+# ------------------------------------------------------------
+$configDir = Join-Path $PSScriptRoot ".config"
+$tenantFile = Join-Path $configDir "tenant-id"
 
-# Check for existing secret
-$existingSecret = dotnet user-secrets list --project "$infraProjectPath" `
-    | Where-Object { $_ -like "$connStringVarName*" }
+if (-not (Test-Path $configDir)) {
+    New-Item -ItemType Directory -Path $configDir | Out-Null
+}
 
-if ($existingSecret) {
-    Write-Host "User secret $connStringVarName already exists. Skipping update." -ForegroundColor Green
+if (Test-Path $tenantFile) {
+    $tenantId = Get-Content $tenantFile
+    Write-Host "Using cached Azure tenant: $tenantId" -ForegroundColor Green
 }
 else {
-    dotnet user-secrets set "$connStringVarName" "$expectedConnectionString" `
-        --project "$infraProjectPath"
 
-    Write-Host "User secret $connStringVarName configured successfully." -ForegroundColor Green
+    Write-Host ""
+    Write-Host "------------------------------------------------------------"
+    Write-Host "Azure Authentication"
+    Write-Host "------------------------------------------------------------"
+    Write-Host "Enter the Azure Tenant ID that contains your Key Vault."
+    Write-Host "You can find this in the Azure Portal under:"
+    Write-Host "Azure Active Directory → Overview → Directory ID"
+    Write-Host ""
+
+    $tenantId = Read-Host "Tenant ID (Directory ID)"
+
+    if (-not $tenantId) {
+        Write-Error "Tenant ID is required."
+        exit 1
+    }
+
+    $tenantId | Out-File $tenantFile
+    Write-Host "Tenant ID saved for future runs." -ForegroundColor Yellow
 }
 
-Write-Host "Restart the application if it is currently running for the change to take effect." -ForegroundColor Yellow
+# ------------------------------------------------------------
+# Azure Authentication
+# ------------------------------------------------------------
+Write-Host ""
+Write-Host "Signing into Azure tenant $tenantId..."
+
+az login --tenant $tenantId | Out-Null
+
+# ------------------------------------------------------------
+# Locate the correct subscription automatically
+# ------------------------------------------------------------
+Write-Host "Searching for Key Vault '$keyVaultName'..."
+
+$subscriptions = az account list --query "[].id" --output tsv
+
+$keyVaultSubscription = $null
+
+foreach ($sub in $subscriptions) {
+
+    az account set --subscription $sub | Out-Null
+
+    $exists = az keyvault show `
+        --name $keyVaultName `
+        --query name `
+        --output tsv 2>$null
+
+    if ($exists) {
+        $keyVaultSubscription = $sub
+        break
+    }
+}
+
+if (-not $keyVaultSubscription) {
+    Write-Error "Could not locate Key Vault '$keyVaultName' in any accessible subscription."
+    Write-Error "Ensure the vault exists and your Azure account has access."
+    exit 1
+}
+
+az account set --subscription $keyVaultSubscription
+
+$subscriptionName = az account show --query name --output tsv
+
+Write-Host "Using subscription: $subscriptionName" -ForegroundColor Green
+
+# ------------------------------------------------------------
+# Retrieve connection string
+# ------------------------------------------------------------
+Write-Host "Retrieving connection string from Azure Key Vault..."
+
+$connString = az keyvault secret show `
+    --vault-name $keyVaultName `
+    --name $secretName `
+    --query value `
+    --output tsv
+
+if (-not $connString) {
+    Write-Error "Failed to retrieve secret '$secretName' from Key Vault."
+    exit 1
+}
+
+Write-Host "Connection string retrieved successfully." -ForegroundColor Green
+
+# ------------------------------------------------------------
+# Parse Connection String
+# ------------------------------------------------------------
+$connectionParts = @{}
+$connString.Split(";") | ForEach-Object {
+    if ($_ -match "=") {
+        $k,$v = $_.Split("=",2)
+        $connectionParts[$k.Trim()] = $v.Trim()
+    }
+}
+
+$saPassword = $connectionParts["Password"]
+$server = $connectionParts["Server"]
+
+if (-not $saPassword) {
+    Write-Error "Could not determine SQL Server password from connection string."
+    exit 1
+}
+
+# Extract port (example: localhost,4000)
+if ($server -match ",(\d+)$") {
+    $port = $Matches[1]
+}
+else {
+    $port = "1433"
+}
+
+Write-Host "Using SQL Server port: $port"
 
 # ------------------------------------------------------------
 # SQL Server Container Setup
 # ------------------------------------------------------------
-docker rm odyssey_sqlserver -f
+Write-Host "Starting SQL Server Docker container..."
+
+docker rm odyssey_sqlserver -f 2>$null | Out-Null
+
 docker run `
     --name odyssey_sqlserver `
-    -e 'ACCEPT_EULA=Y' `
-    -e 'SA_PASSWORD=SqlSecret!' `
-    -p 4000:1433 `
-    -d mcr.microsoft.com/mssql/server:2022-latest
+    -e "ACCEPT_EULA=Y" `
+    -e "SA_PASSWORD=$saPassword" `
+    -p "$port`:1433" `
+    -d mcr.microsoft.com/mssql/server:2022-latest | Out-Null
 
+# ------------------------------------------------------------
 # Wait for SQL Server to be available
-while ((Test-Connection localhost -TcpPort 4000 -Detailed).Status -ne 'Success') {
-    Write-Verbose "SQL Server not ready yet. Waiting 5 seconds..."
+# ------------------------------------------------------------
+Write-Host "Waiting for SQL Server to start..."
+
+while ((Test-Connection localhost -TcpPort $port -Detailed).Status -ne 'Success') {
+    Write-Host "SQL Server not ready yet. Waiting 5 seconds..."
     Start-Sleep -Seconds 5
 }
+
+Write-Host "SQL Server is ready." -ForegroundColor Green
 
 # ------------------------------------------------------------
 # Apply Migrations
 # ------------------------------------------------------------
+Write-Host "Applying EF Core migrations..."
+
 & "$PSScriptRoot/Start-Migrations.ps1"

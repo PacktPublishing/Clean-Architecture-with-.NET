@@ -62,13 +62,11 @@
 
     private async Task RefreshShoppingCart()
     {
-        if (_user != null)
-        {
-            var query = new AccessCustomerShoppingCartQuery(_user.Id);
-            _shoppingCart = await Mediator.Send(query);
-            _isBadgeVisible = _shoppingCart?.Items.Count > 0;
-            _cartItemCount = _shoppingCart?.Items.Count ?? 0;
-        }
+        if (_user is null) return;
+        var query = new AccessCustomerShoppingCartQuery(_user.Id);
+        _shoppingCart = await Mediator.Send(query);
+        _isBadgeVisible = _shoppingCart?.Items.Count > 0;
+        _cartItemCount = _shoppingCart?.Items.Count ?? 0;
     }
 
     public void Dispose()

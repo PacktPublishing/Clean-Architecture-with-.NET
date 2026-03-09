@@ -10,60 +10,69 @@ public class ConfigurationBuilderExtensionsTests
 
     public ConfigurationBuilderExtensionsTests()
     {
-        // Set test environment variable to ensure isolation
+        // Ensure test environment
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "test");
 
-        // Mock an environment variable to ensure it overrides JSON settings and Key Vault
-        Environment.SetEnvironmentVariable("AzureAd__TenantId", "env-tenant-id");
+        // Environment variable should override all other configuration sources
+        Environment.SetEnvironmentVariable("IntegrationTest__EnvVarOverride", "env-value");
 
-        // Create configuration builder and apply the extension method
+        var baseValues = new Dictionary<string, string?>
+        {
+            ["IntegrationTest:BaseOnly"] = "base-value"
+        };
+
         var configurationBuilder = new ConfigurationBuilder();
+
+        // Base configuration
+        configurationBuilder.AddInMemoryCollection(baseValues);
+
+        // Application configuration pipeline
         configurationBuilder.AddPresentationLayerConfiguration();
 
         _configuration = configurationBuilder.Build();
     }
 
     [Fact]
-    public void Configuration_ShouldLoad_BaseSettings()
+    public void BaseConfiguration_ShouldLoad_BaseValue()
     {
-        string expectedInstance = "[Enter the Login URL https://<your-tenant-name>.ciamlogin.com/]";
+        string expectedValue = "base-value";
 
-        string? instanceValue = _configuration["AzureAd:Authority"];
+        string? value = _configuration["IntegrationTest:BaseOnly"];
 
-        instanceValue.Should().NotBeNullOrEmpty();
-        instanceValue.Should().Be(expectedInstance);
+        value.Should().NotBeNullOrEmpty();
+        value.Should().Be(expectedValue);
     }
 
     [Fact]
-    public void Configuration_ShouldLoad_TestEnvironmentOverrides()
+    public void EnvironmentJson_ShouldOverride_BaseConfiguration()
     {
-        string expectedClientId = "test-callback-path"; // From appsettings.test.json
+        string expectedValue = "json-env-value";
 
-        string? clientIdValue = _configuration["AzureAd:CallbackPath"];
+        string? value = _configuration["IntegrationTest:EnvOverride"];
 
-        clientIdValue.Should().NotBeNullOrEmpty();
-        clientIdValue.Should().Be(expectedClientId);
+        value.Should().NotBeNullOrEmpty();
+        value.Should().Be(expectedValue);
     }
 
     [Fact]
-    public void KeyVault_ShouldOverride_TestConfiguration()
+    public void KeyVault_ShouldOverride_JsonConfiguration()
     {
-        string expectedClientId = "b7856a91-feb0-4789-adc7-7467fe779054"; // From Azure Key Vault
+        string expectedValue = "keyvault-value";
 
-        string? clientIdValue = _configuration["AzureAd:ClientId"];
+        string? value = _configuration["IntegrationTest:KeyVaultOverride"];
 
-        clientIdValue.Should().NotBeNullOrEmpty();
-        clientIdValue.Should().Be(expectedClientId);
+        value.Should().NotBeNullOrEmpty();
+        value.Should().Be(expectedValue);
     }
 
     [Fact]
     public void EnvironmentVariables_ShouldOverride_AllOtherSources()
     {
-        string expectedClientId = "env-tenant-id"; // From environment variable
+        string expectedValue = "env-value";
 
-        string? clientIdValue = _configuration["AzureAd:TenantId"];
+        string? value = _configuration["IntegrationTest:EnvVarOverride"];
 
-        clientIdValue.Should().NotBeNullOrEmpty();
-        clientIdValue.Should().Be(expectedClientId);
+        value.Should().NotBeNullOrEmpty();
+        value.Should().Be(expectedValue);
     }
 }

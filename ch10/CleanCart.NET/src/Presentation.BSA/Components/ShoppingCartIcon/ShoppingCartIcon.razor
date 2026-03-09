@@ -67,7 +67,8 @@
 
     private async Task RefreshShoppingCart()
     {
-        _shoppingCart = await ShoppingCartRepository.GetByUserIdAsync(_user!.Id);
+        if (_user is null) return;
+        _shoppingCart = await ShoppingCartRepository.GetByUserIdAsync(_user.Id);
         _isBadgeVisible = _shoppingCart?.Items.Count > 0;
         _cartItemCount = _shoppingCart?.Items.Count ?? 0;
     }

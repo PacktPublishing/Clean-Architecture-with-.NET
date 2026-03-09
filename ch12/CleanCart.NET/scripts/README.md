@@ -1,12 +1,15 @@
 # Database Initialization Scripts
 
-This folder contains PowerShell scripts to set up and initialize the database for the application. Follow these steps to ensure the database is properly configured with the required schema and initial data.
+This folder contains PowerShell scripts to set up and initialize the database for the application. These scripts automate the process of starting a SQL Server container, retrieving the database connection string securely from Azure Key Vault, and applying Entity Framework Core migrations.
+
+Follow the steps below to ensure the database is properly configured with the required schema and initial data.
 
 ## Prerequisites
 
 - **Docker**: Ensure Docker is installed and running on your machine.
-- **.NET Core**: The `.config/dotnet-tools.json` file is included to manage `dotnet-ef`, the tool used to apply migrations. Run `dotnet tool restore` if this tool is not installed locally.
-- **PowerShell Core**: These scripts require PowerShell Core to execute. Follow the instructions below to install PowerShell Core if it is not already available on your system.
+- **Azure CLI**: Required to authenticate with Azure and retrieve secrets from Azure Key Vault. Install it from: <https://learn.microsoft.com/cli/azure/install-azure-cli>
+- **.NET SDK**: The `.config/dotnet-tools.json` file is included to manage `dotnet-ef`, the tool used to apply migrations. Run `dotnet tool restore` if this tool is not installed locally.
+- **PowerShell Core**: These scripts require PowerShell Core **7.4 or later**. Follow the instructions below to install PowerShell Core if it is not already available on your system.
 
 ### Installing PowerShell
 
@@ -30,9 +33,10 @@ pwsh --version
 
 This script:
 
+- Authenticates with Azure using the Azure CLI.
+- Retrieves the SQL Server connection string from **Azure Key Vault**.
 - Removes any existing SQL Server Docker container with the name `odyssey_sqlserver`.
-- Runs a new SQL Server container in Docker on port 4000.
-- Sets the connection string for SQL Server as a User Secret on the `Infrastructure` project.
+- Runs a new SQL Server container in Docker on port 4000 using the password extracted from the retrieved connection string.
 - Waits for SQL Server to become available.
 - Calls `Start-Migrations.ps1` to apply migrations.
 
@@ -44,27 +48,9 @@ Run this script from the **solution root for the chapter** or **solution root fo
 
 > ⚠️ Warning: Each chapter contains its own solution and Infrastructure project. Running scripts from the repository root may cause the wrong project to be resolved.
 
+> Note: The first time this script runs, you will be prompted to enter the **Azure Tenant ID** that contains the Key Vault used in this chapter. This value is stored locally so it does not need to be entered again on future runs.
+
 > Note: Each time these scripts are run, the database is deleted and recreated, making this approach well-suited for active development where frequent schema changes occur. This promotes agility by allowing developers to make and test breaking changes in the database schema without concerns about preserving existing data.
-
-#### ⚠️ Important Note on Connection Strings in This Repository
-
-The database connection string used by these scripts is **intentionally included in source control** as part of this book’s learning materials.
-
-This is done **solely for demonstration purposes** so that:
-
-- Readers can run the project immediately without additional setup
-- Database initialization remains fully automated and repeatable
-- Until Azure Key Vault is introduced, chapters can focus on Clean Architecture concepts instead of secret management
-
-**You should NOT do this in your own projects.**
-
-In real-world applications:
-
-- Connection strings must **never** be checked into source control
-- Secrets should be supplied via environment variables, user secrets, or a secure secrets manager (such as Azure Key Vault)
-- Initialization scripts should accept configuration externally, not embed credentials
-
-This repository trades strict security practices for approachability and clarity in a controlled, local-only learning environment. Treat it as instructional scaffolding—not a production template.
 
 ---
 

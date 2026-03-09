@@ -18,7 +18,7 @@ internal class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasData(
             new Product
             {
-                Id = new Guid("f0ae6d4f-a312-4a81-830d-ea0c16131326"),
+                Id = Guid.Parse("f0ae6d4f-a312-4a81-830d-ea0c16131326"),
                 Name = "Wireless Mouse",
                 Price = 29.99m,
                 StockLevel = 150,
@@ -26,7 +26,7 @@ internal class ProductConfiguration : IEntityTypeConfiguration<Product>
             },
             new Product
             {
-                Id = new Guid("543b49a3-2daa-46b3-8498-004322f86f41"),
+                Id = Guid.Parse("543b49a3-2daa-46b3-8498-004322f86f41"),
                 Name = "Mechanical Keyboard",
                 Price = 89.99m,
                 StockLevel = 75,
@@ -34,7 +34,7 @@ internal class ProductConfiguration : IEntityTypeConfiguration<Product>
             },
             new Product
             {
-                Id = new Guid("875d83af-a771-4c8b-97e7-c62f2d54b19b"),
+                Id = Guid.Parse("875d83af-a771-4c8b-97e7-c62f2d54b19b"),
                 Name = "27-inch Monitor",
                 Price = 199.99m,
                 StockLevel = 45,
@@ -42,7 +42,7 @@ internal class ProductConfiguration : IEntityTypeConfiguration<Product>
             },
             new Product
             {
-                Id = new Guid("8e8e3c26-2f5a-4ce8-a274-cdc9c83d0b12"),
+                Id = Guid.Parse("8e8e3c26-2f5a-4ce8-a274-cdc9c83d0b12"),
                 Name = "USB-C Hub",
                 Price = 49.99m,
                 StockLevel = 200,
@@ -50,7 +50,7 @@ internal class ProductConfiguration : IEntityTypeConfiguration<Product>
             },
             new Product
             {
-                Id = new Guid("ce1bb70b-8faf-4fb5-bac3-8ae488a95beb"),
+                Id = Guid.Parse("ce1bb70b-8faf-4fb5-bac3-8ae488a95beb"),
                 Name = "Noise Cancelling Headphones",
                 Price = 129.99m,
                 StockLevel = 30,
@@ -58,7 +58,7 @@ internal class ProductConfiguration : IEntityTypeConfiguration<Product>
             },
             new Product
             {
-                Id = new Guid("91b4da28-d060-43ea-861a-ceb8783ef880"),
+                Id = Guid.Parse("91b4da28-d060-43ea-861a-ceb8783ef880"),
                 Name = "Webcam",
                 Price = 69.99m,
                 StockLevel = 120,
@@ -66,7 +66,7 @@ internal class ProductConfiguration : IEntityTypeConfiguration<Product>
             },
             new Product
             {
-                Id = new Guid("77b608ae-1ce8-4bb2-b02c-edd4185e54e5"),
+                Id = Guid.Parse("77b608ae-1ce8-4bb2-b02c-edd4185e54e5"),
                 Name = "Portable SSD",
                 Price = 99.99m,
                 StockLevel = 80,
@@ -74,7 +74,7 @@ internal class ProductConfiguration : IEntityTypeConfiguration<Product>
             },
             new Product
             {
-                Id = new Guid("d182e085-408d-4bc7-aea5-946ca3d0dcec"),
+                Id = Guid.Parse("d182e085-408d-4bc7-aea5-946ca3d0dcec"),
                 Name = "Gaming Chair",
                 Price = 249.99m,
                 StockLevel = 20,
@@ -82,7 +82,7 @@ internal class ProductConfiguration : IEntityTypeConfiguration<Product>
             },
             new Product
             {
-                Id = new Guid("7a7d74b7-e9af-41ca-9f89-69c1e7f45c8c"),
+                Id = Guid.Parse("7a7d74b7-e9af-41ca-9f89-69c1e7f45c8c"),
                 Name = "Smart Speaker",
                 Price = 39.99m,
                 StockLevel = 90,
