@@ -1,8 +1,4 @@
 ﻿using Application.Operations.Commands.User;
-using Application.Operations.Queries.User;
-using Domain.Entities;
-using Domain.Enums;
-using EntityAxis.MediatR.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -58,25 +54,14 @@ public partial class LoginDisplay
 
     private async Task EnsureUserCreated()
     {
-        if (!string.IsNullOrEmpty(Email))
+        if (!string.IsNullOrWhiteSpace(Email))
         {
-            // TODO: Migrate this business logic to the Application layer
-            var query = new GetUserByUsernameQuery(Email);
-            var user = await Mediator.Send(query);
-            if (user == null)
+            await Mediator.Send(new EnsureUserExistsCommand
             {
-                // For testing purposes, grant all roles.
-                // In a real-world scenario, you would assign roles based on the user's permissions and business logic.
-                var defaultRoles = new List<UserRole> { UserRole.Administrator, UserRole.CustomerService };
-                var command = new CreateEntityCommand<UserCreateModel, User, Guid>(new UserCreateModel
-                {
-                    Username = Email,
-                    Email = Email,
-                    FullName = FullName,
-                    Roles = defaultRoles
-                });
-                await Mediator.Send(command);
-            }
+                Email = Email,
+                Username = Email,
+                FullName = FullName
+            });
         }
     }
 }

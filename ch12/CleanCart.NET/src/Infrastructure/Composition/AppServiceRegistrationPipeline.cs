@@ -1,7 +1,7 @@
 ﻿using Application.Interfaces.Services.Payment;
 using Application.Mapping;
 using Application.Operations.Commands.User;
-using Application.Operations.UseCases.AddItemToCart;
+using Application.Operations.UseCases.ProcessPayment;
 using AutoMapper;
 using Domain.Entities;
 using EntityAxis.MediatR.Registration;
@@ -41,7 +41,7 @@ public class AppServiceRegistrationPipeline : ServiceRegistrationPipeline
         // Add SQL Server and Repositories
         AddRegistration(services => services.AddSqlServer());
         AddRegistration(services => services.AddSingleton<IKeyMapper<Guid, Guid>, IdentityKeyMapper<Guid>>());
-        AddRegistration(services => services.AddEntityAxisCommandAndQueryServicesFromAssembly<ProductQueryRepository>(ServiceLifetime.Scoped));
+        AddRegistration(services => services.AddEntityAxisCommandAndQueryServicesFromAssembly<OrderQueryRepository>(ServiceLifetime.Scoped));
 
         // Add Services
         AddRegistration(services => services.AddScoped<IPaymentGateway, PaymentGateway>());
@@ -56,8 +56,8 @@ public class AppServiceRegistrationPipeline : ServiceRegistrationPipeline
         AddRegistration(services => services.AddPaymentGatewayApi());
 
         // Add MediatR
-        AddRegistration(services => services.AddMediatR(config => config.RegisterServicesFromAssembly(typeof(AddItemToCartCommandHandler).Assembly)));
-        AddRegistration(services => services.AddValidatorsFromAssemblyContaining<AddItemToCartCommandValidator>(ServiceLifetime.Scoped, null, false));
+        AddRegistration(services => services.AddMediatR(config => config.RegisterServicesFromAssembly(typeof(ProcessPaymentCommand).Assembly)));
+        AddRegistration(services => services.AddValidatorsFromAssemblyContaining<ProcessPaymentCommandValidator>(ServiceLifetime.Scoped, filter: null, includeInternalTypes: false));
         AddRegistration(services => services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>)));
 
         // Add EntityAxis Handlers

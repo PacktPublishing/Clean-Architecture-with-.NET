@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <PackageReference Include="EntityAxis.MediatR" Version="1.0.0" />
+    <PackageReference Include="EntityAxis.MediatR" Version="2.0.0" />
     <!-- Lock MediatR before commercial version v13 -->
     <PackageReference Include="MediatR" Version="[12.5.0]" />
   </ItemGroup>

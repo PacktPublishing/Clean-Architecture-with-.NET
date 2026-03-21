@@ -1,8 +1,4 @@
 ﻿using Application.Operations.Commands.User;
-using Application.Operations.Queries.User;
-using Domain.Entities;
-using Domain.Enums;
-using EntityAxis.MediatR.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -49,35 +45,23 @@ public partial class LoginDisplay
         Email = _user.GetEmail();
         FirstName = _user.GetFirstName();
         LastName = _user.GetLastName();
-        string userId = _user.GetUserId();
         FullName = $"{FirstName} {LastName}";
         DisplayName = FullName;
 
         // Log the user's information
-        Logger.LogInformation("User authenticated: {UserId}, Email: {Email}, Name: {FullName}", userId, Email, FullName);
+        Logger.LogInformation("User authenticated: {UserId}, Email: {Email}, Name: {FullName}", _user.GetUserId(), Email, FullName);
     }
 
     private async Task EnsureUserCreated()
     {
-        if (!string.IsNullOrEmpty(Email))
+        if (!string.IsNullOrWhiteSpace(Email))
         {
-            // TODO: Migrate this business logic to the Application layer
-            var query = new GetUserByUsernameQuery(Email);
-            var user = await Mediator.Send(query);
-            if (user == null)
+            await Mediator.Send(new EnsureUserExistsCommand
             {
-                // For testing purposes, grant all roles.
-                // In a real-world scenario, you would assign roles based on the user's permissions and business logic.
-                var defaultRoles = new List<UserRole> { UserRole.Administrator, UserRole.CustomerService };
-                var command = new CreateEntityCommand<UserCreateModel, User, Guid>(new UserCreateModel
-                {
-                    Username = Email,
-                    Email = Email,
-                    FullName = FullName,
-                    Roles = defaultRoles
-                });
-                await Mediator.Send(command);
-            }
+                Email = Email,
+                Username = Email,
+                FullName = FullName
+            });
         }
     }
 }

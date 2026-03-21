@@ -2,7 +2,7 @@
 using Application.Interfaces.Services.Telemetry;
 using Application.Mapping;
 using Application.Operations.Commands.User;
-using Application.Operations.UseCases.AddItemToCart;
+using Application.Operations.UseCases.ProcessPayment;
 using AutoMapper;
 using Domain.Entities;
 using EntityAxis.KeyMappers;
@@ -43,7 +43,7 @@ public class AppServiceRegistrationPipeline : ServiceRegistrationPipeline
         // Add SQL Server and Repositories
         AddRegistration((services, config) => services.AddSqlServer());
         AddRegistration((services, config) => services.AddSingleton<IKeyMapper<Guid, Guid>, IdentityKeyMapper<Guid>>());
-        AddRegistration((services, config) => services.AddEntityAxisCommandAndQueryServicesFromAssembly<ProductQueryRepository>(ServiceLifetime.Scoped));
+        AddRegistration((services, config) => services.AddEntityAxisCommandAndQueryServicesFromAssembly<OrderQueryRepository>(ServiceLifetime.Scoped));
 
         // Add Services
         AddRegistration((services, config) => services.AddScoped<IPaymentGateway, PaymentGateway>());
@@ -59,8 +59,8 @@ public class AppServiceRegistrationPipeline : ServiceRegistrationPipeline
         AddRegistration((services, config) => services.AddPaymentGatewayApi());
 
         // Add MediatR
-        AddRegistration((services, config) => services.AddMediatR(config => config.RegisterServicesFromAssembly(typeof(AddItemToCartCommandHandler).Assembly)));
-        AddRegistration((services, config) => services.AddValidatorsFromAssemblyContaining<AddItemToCartCommandValidator>(ServiceLifetime.Scoped, null, false));
+        AddRegistration((services, config) => services.AddMediatR(config => config.RegisterServicesFromAssembly(typeof(ProcessPaymentCommand).Assembly)));
+        AddRegistration((services, config) => services.AddValidatorsFromAssemblyContaining<ProcessPaymentCommandValidator>(ServiceLifetime.Scoped, null, false));
         AddRegistration((services, config) => services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>)));
         AddRegistration((services, config) => services.AddTransient(typeof(IPipelineBehavior<,>), typeof(MetricsAndLoggingPipelineBehavior<,>)));
 
