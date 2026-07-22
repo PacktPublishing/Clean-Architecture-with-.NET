@@ -1,11 +1,10 @@
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using TightlyCoupled.WebShop.Data;
 using TightlyCoupled.WebShop.Models;
 using TightlyCoupled.WebShop.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Initialize global utilities - creates file system dependencies at startup
 GlobalUtilities.CreateRequiredDirectories();
@@ -21,7 +20,7 @@ builder.Host.UseSerilog();
 
 // Add services to the container.
 // Hard-coded connection string - no abstraction
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Server=(localdb)\\mssqllocaldb;Database=TightlyCoupledWebShop;Trusted_Connection=true;MultipleActiveResultSets=true";
 
 // Verify the connection string matches our global utility - tight coupling
@@ -34,7 +33,7 @@ if (connectionString != GlobalUtilities.DATABASE_CONNECTION)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-builder.Services.AddDefaultIdentity<AppUser>(options => 
+builder.Services.AddDefaultIdentity<AppUser>(options =>
 {
     // Hard-coded identity configuration - should be in configuration
     options.SignIn.RequireConfirmedAccount = false;
@@ -50,7 +49,7 @@ builder.Services.AddDefaultIdentity<AppUser>(options =>
 // This violates IoC principles
 builder.Services.AddControllersWithViews();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Environment-specific setup mixed with application startup
 var isDevelopment = app.Environment.IsDevelopment();
@@ -62,7 +61,7 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
-    
+
     // Production-specific file operations at startup - bad practice
     try
     {
@@ -78,14 +77,14 @@ else
 {
     // Development-specific setup
     GlobalUtilities.LogError("Development mode: Creating sample data files");
-    
+
     // Create sample data files for development - infrastructure concerns in startup
     try
     {
         var sampleDataPath = Path.Combine(GlobalUtilities.DATA_DIRECTORY, "sample_data.json");
         if (!File.Exists(sampleDataPath))
         {
-            var sampleData = """
+            const string sampleData = """
             {
                 "sample_users": [
                     {"email": "test@example.com", "name": "Test User"},
