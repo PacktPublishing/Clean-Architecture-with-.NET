@@ -15,5 +15,5 @@ public class OrderConfirmationViewModel
     public decimal ShippingCost { get; set; }
     public decimal TotalPrice { get; set; }
 
-    public List<CartItemViewModel> Items { get; set; } = new();
+    public List<CartItemViewModel> Items { get; set; } = [];
 }

@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace TightlyCoupled.WebShop.ViewModels;
+
 public class RegisterViewModel
 {
     [Required]
