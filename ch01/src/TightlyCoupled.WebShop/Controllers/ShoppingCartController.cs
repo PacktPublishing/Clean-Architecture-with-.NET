@@ -338,7 +338,7 @@ namespace TightlyCoupled.WebShop.Controllers
                 {
                     smtpClient.Connect(SMTP_SERVER, SMTP_PORT, false);
                     smtpClient.Authenticate(EMAIL_USERNAME, EMAIL_PASSWORD);
-                    smtpClient.Send(message);
+                    smtpClient.Send(new MailKit.SendRequest(message));
                     smtpClient.Disconnect(true);
                 }
                 
@@ -371,7 +371,7 @@ namespace TightlyCoupled.WebShop.Controllers
                 {
                     smtpClient.Connect(SMTP_SERVER, SMTP_PORT, false);
                     smtpClient.Authenticate(EMAIL_USERNAME, EMAIL_PASSWORD);
-                    smtpClient.Send(message);
+                    smtpClient.Send(new MailKit.SendRequest(message));
                     smtpClient.Disconnect(true);
                 }
             }
@@ -413,7 +413,7 @@ WebShop System"
                 {
                     smtpClient.Connect(SMTP_SERVER, SMTP_PORT, false);
                     smtpClient.Authenticate(EMAIL_USERNAME, EMAIL_PASSWORD);
-                    smtpClient.Send(message);
+                    smtpClient.Send(new MailKit.SendRequest(message));
                     smtpClient.Disconnect(true);
                 }
                 
@@ -1029,7 +1029,7 @@ Order processed on {Environment.MachineName} at {DateTime.Now}
                 {
                     smtpClient.Connect(SMTP_SERVER, SMTP_PORT, false);
                     smtpClient.Authenticate(EMAIL_USERNAME, EMAIL_PASSWORD);
-                    smtpClient.Send(message);
+                    smtpClient.Send(new MailKit.SendRequest(message));
                     smtpClient.Disconnect(true);
                 }
                 

@@ -20,8 +20,7 @@ public sealed class TestInitializer : IAsyncLifetime
     private const string Password = "yourStrong(!)Password";
     private const ushort MsSqlPort = 1433;
 
-    private readonly IContainer _mssqlContainer = new ContainerBuilder()
-        .WithImage("mcr.microsoft.com/mssql/server:2022-CU1-ubuntu-20.04")
+    private readonly IContainer _mssqlContainer = new ContainerBuilder("mcr.microsoft.com/mssql/server:2022-CU1-ubuntu-20.04")
         .WithPortBinding(MsSqlPort, true)
         .WithEnvironment("ACCEPT_EULA", "Y")
         .WithEnvironment("SQLCMDUSER", Username)

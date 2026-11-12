@@ -13,7 +13,9 @@ public class PaymentGatewayTests
     public async Task ProcessPaymentAsync_ReturnsPaymentResult()
     {
         var mockApi = Substitute.For<IPaymentGatewayApi>();
-        var mockApiResponse = new ApiResponse<string>(new HttpResponseMessage(HttpStatusCode.Created), string.Empty, new RefitSettings());
+        using var request = new HttpRequestMessage();
+        using var response = new HttpResponseMessage(HttpStatusCode.Created) { RequestMessage = request };
+        var mockApiResponse = new ApiResponse<string>(response, string.Empty, new RefitSettings());
         mockApi.ProcessPaymentAsync(Arg.Any<object>()).Returns(mockApiResponse);
         var paymentRequest = new PaymentRequest();
         var paymentGateway = new PaymentGateway(mockApi);
@@ -31,7 +33,9 @@ public class PaymentGatewayTests
     public async Task GetPaymentStatusAsync_ReturnsPaymentStatus()
     {
         var mockApi = Substitute.For<IPaymentGatewayApi>();
-        var mockApiResponse = new ApiResponse<string>(new HttpResponseMessage(HttpStatusCode.OK), string.Empty, new RefitSettings());
+        using var request = new HttpRequestMessage();
+        using var response = new HttpResponseMessage(HttpStatusCode.OK) { RequestMessage = request };
+        var mockApiResponse = new ApiResponse<string>(response, string.Empty, new RefitSettings());
         mockApi.GetPaymentStatusAsync(Arg.Any<string>()).Returns(mockApiResponse);
         var paymentId = "paymentId";
         var paymentGateway = new PaymentGateway(mockApi);

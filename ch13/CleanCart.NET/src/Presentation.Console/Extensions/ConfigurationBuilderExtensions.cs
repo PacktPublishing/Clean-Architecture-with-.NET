@@ -24,7 +24,7 @@ internal static class ConfigurationBuilderExtensions
         {
             "Development" => new VisualStudioCredential(), // Uses VS credentials for local development
             "test" => new VisualStudioCredential(), // Uses VS credentials for local testing
-            _ => new ManagedIdentityCredential() // Recommended for Azure-hosted environments
+            _ => new ManagedIdentityCredential(ManagedIdentityId.SystemAssigned) // Recommended for Azure-hosted environments
         };
 
         // Add Azure Key Vault as a configuration provider

@@ -70,7 +70,7 @@ public partial class Checkout
 
     private async Task OnFormSubmit()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
 
         if (!_form.IsValid)
             return;

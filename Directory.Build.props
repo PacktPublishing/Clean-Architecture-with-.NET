@@ -47,7 +47,7 @@
 
   <PropertyGroup>
     <!-- Shared .NET version for all chapter projects -->
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
 
     <!-- Consistent compile-time behavior -->
     <LangVersion>latest</LangVersion>
@@ -59,6 +59,11 @@
     <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- AutoMapper is explicitly pinned to 14.0.0 in the chapter samples. -->
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rvv3-g6hj-g44x" />
+  </ItemGroup>
+
   <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -67,17 +72,17 @@
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
 
     <!-- Test infrastructure -->
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
 
     <!-- xUnit test framework -->
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
 
     <!-- Code coverage -->
-    <PackageReference Include="coverlet.collector" Version="6.0.4">
+    <PackageReference Include="coverlet.collector" Version="10.1.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -88,7 +93,7 @@
   <ItemGroup Condition="'$(IsTestProject)' == 'true' Or '$(MSBuildProjectName)' == 'TestCommon'">
 
     <!-- Mocking library -->
-    <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <PackageReference Include="NSubstitute" Version="6.2.0" />
 
   </ItemGroup>
 
