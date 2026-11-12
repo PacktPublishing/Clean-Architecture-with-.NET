@@ -6,4 +6,5 @@ These notes explain changes to the samples after publication that affect followi
 
 | Date | Update | Chapters | Reader action |
 | --- | --- | --- | --- |
+| 2026-11-11 | [Domain entities in application responses](domain-entities-in-presentation.md) | 9–14 | Understand the response-model boundary and compare direct cart mutations with application use cases. |
 | 2026-11-11 | [.NET 11 upgrade and Azure Functions build workaround](dotnet-11.md) | All. Additional Function setup in chapter 14. | Install .NET 11, update packages, and apply the chapter 14 project settings and build workaround. |
